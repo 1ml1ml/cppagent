@@ -4,6 +4,8 @@
 
 import openai_provider;
 import llm_provider;
+import context;
+import message;
 
 using namespace std::string_view_literals;
 
@@ -82,10 +84,8 @@ TEST_CASE("openai_provider generate_async 异常透传", "[openai_provider]")
   REQUIRE_THROWS_AS(fut.get(), std::runtime_error);
 }
 
-TEST_CASE("openai_provider generate 返回 result_base", "[openai_provider]")
+TEST_CASE("openai_provider generate 无效网络配置抛异常", "[openai_provider]")
 {
-  // 这是一个 mock 测试：在没有真实 API 的情况下，验证返回类型正确
-  // 实际运行时需要有有效的 API key
   openai_provider provider{};
   nlohmann::json config{};
   config["model"] = "test";
@@ -96,7 +96,6 @@ TEST_CASE("openai_provider generate 返回 result_base", "[openai_provider]")
   auto ctx{std::make_shared<context>()};
   ctx->append(std::make_shared<message>(message::role::user, "hi"sv));
 
-  // 由于无法连接真实 API，这里会抛网络异常
-  // 但至少验证接口编译通过
+  // 无效 base_url 导致网络请求失败
   REQUIRE_THROWS(provider.generate(ctx));
 }

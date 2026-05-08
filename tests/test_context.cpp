@@ -7,10 +7,9 @@ import context;
 
 using namespace std::string_view_literals;
 
-TEST_CASE("context 默认构造为空", "[context]")
+TEST_CASE("context 默认构造", "[context]")
 {
   auto ctx{std::make_shared<context>()};
-  REQUIRE(ctx->empty());
   REQUIRE(ctx->size() == 0);
 }
 
@@ -22,9 +21,8 @@ TEST_CASE("context 追加单条消息", "[context]")
   ctx->append(msg);
 
   REQUIRE(ctx->size() == 1);
-  REQUIRE(!ctx->empty());
-  REQUIRE(ctx->last_message()->get_content() == "hello"sv);
-  REQUIRE(ctx->last_message()->get_role() == message::role::user);
+  REQUIRE(ctx->messages_ref().back()->get_content() == "hello"sv);
+  REQUIRE(ctx->messages_ref().back()->get_role() == message::role::user);
 }
 
 TEST_CASE("context 追加多条消息", "[context]")
@@ -36,8 +34,8 @@ TEST_CASE("context 追加多条消息", "[context]")
   ctx->append(std::vector{msg1, msg2});
 
   REQUIRE(ctx->size() == 2);
-  REQUIRE(ctx->last_message()->get_content() == "second"sv);
-  REQUIRE(ctx->last_message()->get_role() == message::role::assistant);
+  REQUIRE(ctx->messages_ref().back()->get_content() == "second"sv);
+  REQUIRE(ctx->messages_ref().back()->get_role() == message::role::assistant);
 }
 
 TEST_CASE("context 清空", "[context]")
@@ -47,7 +45,6 @@ TEST_CASE("context 清空", "[context]")
 
   ctx->clear();
 
-  REQUIRE(ctx->empty());
   REQUIRE(ctx->size() == 0);
 }
 
@@ -81,32 +78,15 @@ TEST_CASE("context messages_ref 零拷贝", "[context]")
   REQUIRE(msgs[1]->get_content() == "two"sv);
 }
 
-TEST_CASE("context find_last", "[context]")
+TEST_CASE("context messages 返回值拷贝", "[context]")
 {
   auto ctx{std::make_shared<context>()};
-  ctx->append(std::make_shared<message>(message::role::user, "u1"sv));
-  ctx->append(std::make_shared<message>(message::role::assistant, "a1"sv));
-  ctx->append(std::make_shared<message>(message::role::user, "u2"sv));
+  ctx->append(std::make_shared<message>(message::role::user, "hello"sv));
 
-  auto last_user = ctx->find_last(message::role::user);
-  REQUIRE(last_user != nullptr);
-  REQUIRE(last_user->get_content() == "u2"sv);
+  auto msgs1 = ctx->messages();
+  auto msgs2 = ctx->messages();
 
-  auto last_system = ctx->find_last(message::role::system);
-  REQUIRE(last_system == nullptr);
-}
-
-TEST_CASE("context 迭代器", "[context]")
-{
-  auto ctx{std::make_shared<context>()};
-  ctx->append(std::make_shared<message>(message::role::user, "first"sv));
-  ctx->append(std::make_shared<message>(message::role::assistant, "second"sv));
-
-  int count = 0;
-  for (const auto& msg : *ctx)
-  {
-    ++count;
-    REQUIRE(msg != nullptr);
-  }
-  REQUIRE(count == 2);
+  REQUIRE(msgs1.size() == 1);
+  REQUIRE(msgs2.size() == 1);
+  REQUIRE(msgs1[0]->get_content() == "hello"sv);
 }
