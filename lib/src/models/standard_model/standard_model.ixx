@@ -14,6 +14,7 @@ export class standard_model final : public i_model
 {
 public:
   standard_model();
+  ~standard_model();
 
 public:
   nlohmann::json get_config() const override;

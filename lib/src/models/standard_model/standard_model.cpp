@@ -10,14 +10,16 @@ module standard_model;
 class standard_model::impl
 {
 public:
-  nlohmann::json config{};
   client_unique_ptr client{};
+	nlohmann::json config{ nlohmann::json::object() };
 };
 
 standard_model::standard_model() :
   impl{ std::make_unique<class impl>() }
 {
 }
+
+standard_model::~standard_model() = default;
 
 nlohmann::json standard_model::get_config() const
 {

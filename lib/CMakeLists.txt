@@ -23,7 +23,7 @@ target_sources(cppagent_lib
 )
 
 target_sources(cppagent_lib
-	PUBLIC
+	PRIVATE
 		"src/mimetypes.hpp"
 		"src/models/model_registry.cpp"
 		"src/models/standard_model/standard_model.cpp"

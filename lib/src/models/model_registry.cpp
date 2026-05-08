@@ -24,6 +24,8 @@ model_registry::model_registry() :
 {
 }
 
+model_registry::~model_registry() = default;
+
 model_shared_ptr model_registry::create(const std::string& provider_name) const
 {
   auto it{ impl->factories.find(provider_name) };

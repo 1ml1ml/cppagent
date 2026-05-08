@@ -15,6 +15,7 @@ public:
 
 private:
   model_registry();
+  ~model_registry();
 
 public:
   model_shared_ptr create(const std::string& provider_name) const;

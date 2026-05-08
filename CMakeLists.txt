@@ -20,5 +20,9 @@ add_subdirectory(lib)
 # ── app ──
 add_subdirectory(app)
 
+# ── external ──
+add_subdirectory(external/catch2 EXCLUDE_FROM_ALL)
+
 # ── tests ──
-# add_subdirectory(tests)
+enable_testing()
+add_subdirectory(tests EXCLUDE_FROM_ALL)
