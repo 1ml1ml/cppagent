@@ -18,15 +18,11 @@ public:
   ~openai_provider();
 
 public:
-  void set_config(const nlohmann::json& config) override;
   nlohmann::json get_config() const override;
+  void set_config(const nlohmann::json& config) override;
 
-  std::shared_ptr<result_base> generate(
-      const context_shared_ptr& ctx,
-      const stream_callback& callback = {}) override;
-  std::future<std::shared_ptr<result_base>> generate_async(
-      const context_shared_ptr& ctx,
-      const stream_callback& callback = {}) override;
+  generation_result_shared_ptr generate( const context_shared_ptr& ctx, const stream_callback& callback = {}) override;
+  std::future<generation_result_shared_ptr> generate_async( const context_shared_ptr& ctx, const stream_callback& callback = {}) override;
 
 private:
   class impl;

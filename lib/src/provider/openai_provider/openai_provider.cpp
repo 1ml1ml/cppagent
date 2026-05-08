@@ -31,15 +31,7 @@ public:
 
 liboai::Conversation openai_provider::impl::context_to_conversation(const context_shared_ptr& ctx)
 {
-  auto system_count
-  {
-    std::ranges::count_if(ctx->messages_ref(), [](const auto& msg)
-    {
-      return msg->get_role() == message::role::system;
-    })
-  };
-
-  if (system_count > 1)
+  if (auto system_count { std::ranges::count_if(ctx->messages_ref(), [](const auto& msg) { return msg->get_role() == message::role::system; }) }; system_count > 1)
   {
     throw std::runtime_error("context contains multiple system messages (" + std::to_string(system_count) + "), expected at most 1");
   }
@@ -88,7 +80,7 @@ nlohmann::json openai_provider::get_config() const
   return impl->config;
 }
 
-std::shared_ptr<result_base> openai_provider::generate(const context_shared_ptr& ctx, const stream_callback& stream_callback)
+generation_result_shared_ptr openai_provider::generate(const context_shared_ptr& ctx, const stream_callback& stream_callback)
 {
   auto conv{ impl::context_to_conversation(ctx) };
 
@@ -117,102 +109,14 @@ std::shared_ptr<result_base> openai_provider::generate(const context_shared_ptr&
       impl->config.contains("user") ? std::optional{ impl->config["user"].get<std::string>() } : std::nullopt)
   };
 
-  // 解析响应：判断有没有 tool_calls
-  auto& choice = response["choices"][0];
-  bool has_tool_calls = choice.contains("message") && choice["message"].contains("tool_calls");
-
-  if (has_tool_calls)
-  {
-    auto result = std::make_shared<tool_result>();
-
-    // 基类字段
-    if (response.contains("id"))
-    {
-      result->id = response["id"].get<std::string>();
-    }
-    if (response.contains("model"))
-    {
-      result->model = response["model"].get<std::string>();
-    }
-
-    // 工具调用
-    for (const auto& tc : choice["message"]["tool_calls"])
-    {
-      tool_call call;
-      call.id = tc["id"].get<std::string>();
-      call.type = tc["type"].get<std::string>();
-      call.function_name = tc["function"]["name"].get<std::string>();
-      call.arguments = nlohmann::json::parse(tc["function"]["arguments"].get<std::string>());
-      result->tool_calls.push_back(call);
-    }
-
-    // 可选思考过程
-    auto content = conv.GetLastResponse();
-    if (!content.empty())
-    {
-      result->message = std::make_shared<message>(message::role::assistant, content);
-    }
-
-    // usage
-    if (response.contains("usage"))
-    {
-      result->usage = usage_info
-      {
-        .prompt_tokens = response["usage"]["prompt_tokens"].get<int>(),
-        .completion_tokens = response["usage"]["completion_tokens"].get<int>(),
-        .total_tokens = response["usage"]["total_tokens"].get<int>()
-      };
-    }
-
-    return result;
-  }
-  else
-  {
-    auto result = std::make_shared<text_result>();
-
-    // 基类字段
-    if (response.contains("id"))
-    {
-      result->id = response["id"].get<std::string>();
-    }
-    if (response.contains("model"))
-    {
-      result->model = response["model"].get<std::string>();
-    }
-
-    // message
-    result->message = std::make_shared<message>(message::role::assistant, conv.GetLastResponse());
-
-    // finish_reason
-    if (choice.contains("finish_reason"))
-    {
-      result->finish_reason = choice["finish_reason"].get<std::string>();
-    }
-
-    // usage
-    if (response.contains("usage"))
-    {
-      result->usage = usage_info
-      {
-        .prompt_tokens = response["usage"]["prompt_tokens"].get<int>(),
-        .completion_tokens = response["usage"]["completion_tokens"].get<int>(),
-        .total_tokens = response["usage"]["total_tokens"].get<int>()
-      };
-    }
-
-    return result;
-  }
+  return {};
 }
 
-std::future<std::shared_ptr<result_base>> openai_provider::generate_async(const context_shared_ptr& ctx, const stream_callback& stream_callback)
+std::future<generation_result_shared_ptr> openai_provider::generate_async(const context_shared_ptr& ctx, const stream_callback& stream_callback)
 {
-  return std::async(std::launch::async, [this, ctx, stream_callback]()
-  {
-    return generate(ctx, stream_callback);
-  });
+  return std::async(std::launch::async, [this, ctx, stream_callback]() { return generate(ctx, stream_callback); });
 }
 
-// 工厂实现
 std::string_view openai_factory::name() const
 {
   return "openai";
