@@ -23,19 +23,11 @@ public:
     void append(const message_shared_ptr& msg);
     void append(const std::vector<message_shared_ptr>& msgs);
 
-    message_shared_ptr last_message() const;
     std::vector<message_shared_ptr> messages() const;
     const std::vector<message_shared_ptr>& messages_ref() const;
 
-    message_shared_ptr find_last(message::role r) const;
-
-    bool empty() const;
     size_t size() const;
-
     void clear();
-
-    auto begin() const;
-    auto end() const;
 
 private:
     class impl;

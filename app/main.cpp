@@ -67,13 +67,27 @@ int main()
 	try
 	{
 		auto result = provider->generate(ctx);
-		if (result.message)
+
+		if (auto* text = dynamic_cast<text_result*>(result.get()))
 		{
-			std::cout << "Assistant: " << result.message->get_content() << "\n";
+			std::cout << "Assistant: " << text->message->get_content() << "\n";
+			std::cout << "Tokens: " << text->usage.total_tokens << "\n";
+			if (text->is_truncated())
+			{
+				std::cout << "[警告] 回复被截断\n";
+			}
 		}
-		if (result.usage)
+		else if (auto* tool = dynamic_cast<tool_result*>(result.get()))
 		{
-			std::cout << "Tokens: " << result.usage->total_tokens << "\n";
+			std::cout << "[工具调用] " << tool->tool_calls.size() << " 个工具待执行\n";
+			for (const auto& call : tool->tool_calls)
+			{
+				std::cout << "  - " << call.function_name << "(" << call.arguments.dump() << ")\n";
+			}
+		}
+		else
+		{
+			std::cerr << "未知结果类型\n";
 		}
 	}
 	catch (const std::exception& e)

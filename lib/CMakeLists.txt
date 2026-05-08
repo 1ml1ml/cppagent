@@ -2,7 +2,6 @@ add_library(cppagent_lib STATIC)
 
 target_include_directories(cppagent_lib PUBLIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/core/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/provider/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/provider/openai_provider/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/message/"
@@ -12,8 +11,6 @@ target_include_directories(cppagent_lib PUBLIC
 target_sources(cppagent_lib
 	PUBLIC
 		FILE_SET cxx_modules TYPE CXX_MODULES FILES
-		"src/core/generation_result.ixx"
-		"src/core/config_validator.ixx"
 		"src/provider/llm_provider.ixx"
 		"src/provider/provider_registry.ixx"
 		"src/provider/openai_provider/openai_provider.ixx"

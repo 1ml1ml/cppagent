@@ -36,11 +36,6 @@ void context::append(const std::vector<message_shared_ptr>& msgs)
 	impl->msgs.insert(impl->msgs.end(), msgs.cbegin(), msgs.cend());
 }
 
-message_shared_ptr context::last_message() const
-{
-	return impl->msgs.empty() ? nullptr : impl->msgs.back();
-}
-
 std::vector<message_shared_ptr> context::messages() const
 {
 	return impl->msgs;
@@ -49,23 +44,6 @@ std::vector<message_shared_ptr> context::messages() const
 const std::vector<message_shared_ptr>& context::messages_ref() const
 {
 	return impl->msgs;
-}
-
-message_shared_ptr context::find_last(message::role r) const
-{
-	for (auto it = impl->msgs.rbegin(); it != impl->msgs.rend(); ++it)
-	{
-		if ((*it)->get_role() == r)
-		{
-			return *it;
-		}
-	}
-	return nullptr;
-}
-
-bool context::empty() const
-{
-	return impl->msgs.empty();
 }
 
 size_t context::size() const
@@ -78,19 +56,9 @@ void context::clear()
 	impl->msgs.clear();
 }
 
-auto context::begin() const
-{
-	return impl->msgs.begin();
-}
-
-auto context::end() const
-{
-	return impl->msgs.end();
-}
-
 std::ostream& operator<<(std::ostream& os, const context& ctx)
 {
-	if (ctx.empty())
+	if (ctx.size() == 0)
 	{
 		return os << "<empty context>";
 	}
