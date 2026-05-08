@@ -2,22 +2,21 @@ add_library(cppagent_lib STATIC)
 
 target_include_directories(cppagent_lib PUBLIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/models/"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/models/standard_model/"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/core/"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/provider/"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/provider/openai_provider/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/message/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/context/"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/clients/"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/clients/openai_client/"
 )
 
 target_sources(cppagent_lib
 	PUBLIC
 		FILE_SET cxx_modules TYPE CXX_MODULES FILES
-		"src/clients/i_client.ixx"
-		"src/models/i_model.ixx"
-		"src/models/model_registry.ixx"
-		"src/models/standard_model/standard_model.ixx"
-		"src/clients/openai_client/openai_client.ixx"
+		"src/core/generation_result.ixx"
+		"src/core/config_validator.ixx"
+		"src/provider/llm_provider.ixx"
+		"src/provider/provider_registry.ixx"
+		"src/provider/openai_provider/openai_provider.ixx"
 		"src/message/message.ixx"
 		"src/context/context.ixx"
 )
@@ -25,9 +24,8 @@ target_sources(cppagent_lib
 target_sources(cppagent_lib
 	PRIVATE
 		"src/mimetypes.hpp"
-		"src/models/model_registry.cpp"
-		"src/models/standard_model/standard_model.cpp"
-		"src/clients/openai_client/openai_client.cpp"
+		"src/provider/provider_registry.cpp"
+		"src/provider/openai_provider/openai_provider.cpp"
 		"src/context/context.cpp"
 		"src/message/message.cpp"
 )

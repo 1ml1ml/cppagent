@@ -23,7 +23,7 @@ context::~context() = default;
 
 void context::merge(const context_shared_ptr& ctx)
 {
-	append(ctx->messages());
+	append(ctx->messages_ref());
 }
 
 void context::append(const message_shared_ptr& msg)
@@ -46,6 +46,23 @@ std::vector<message_shared_ptr> context::messages() const
 	return impl->msgs;
 }
 
+const std::vector<message_shared_ptr>& context::messages_ref() const
+{
+	return impl->msgs;
+}
+
+message_shared_ptr context::find_last(message::role r) const
+{
+	for (auto it = impl->msgs.rbegin(); it != impl->msgs.rend(); ++it)
+	{
+		if ((*it)->get_role() == r)
+		{
+			return *it;
+		}
+	}
+	return nullptr;
+}
+
 bool context::empty() const
 {
 	return impl->msgs.empty();
@@ -61,6 +78,16 @@ void context::clear()
 	impl->msgs.clear();
 }
 
+auto context::begin() const
+{
+	return impl->msgs.begin();
+}
+
+auto context::end() const
+{
+	return impl->msgs.end();
+}
+
 std::ostream& operator<<(std::ostream& os, const context& ctx)
 {
 	if (ctx.empty())
@@ -69,7 +96,7 @@ std::ostream& operator<<(std::ostream& os, const context& ctx)
 	}
 
 	os << "--- Context (" << ctx.size() << " messages) ---\n";
-	for (const auto& msg : ctx.messages())
+	for (const auto& msg : ctx.messages_ref())
 	{
 		if (msg)
 		{

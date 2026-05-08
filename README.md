@@ -1,60 +1,60 @@
 # cppagent
 
-C++ AI agent framework with C++20 Modules.
+C++20 Modules + CMake project for LLM agent.
 
-## Project Structure
+## 架构
 
 ```
-cppagent/
-├── lib/                          # Static library (cppagent_lib)
-│   ├── src/
-│   │   ├── clients/              # Client interfaces & implementations
-│   │   ├── context/              # Message context management
-│   │   ├── message/              # Message types
-│   │   └── models/               # Model registry & implementations
-│   └── CMakeLists.txt
-├── app/                          # Executable target
-│   └── main.cpp
-├── tests/                        # Unit tests (Catch2 v3)
-│   ├── test_message.cpp
-│   ├── test_context.cpp
-│   ├── test_model_registry.cpp
-│   ├── test_standard_model.cpp
-│   └── test_openai_client.cpp
-├── external/                     # Git submodules (e.g., catch2)
-└── CMakeLists.txt
+lib/src/
+  core/
+    generation_result.ixx    # 生成结果结构（含 usage/token）
+    config_validator.ixx     # 配置校验
+  provider/
+    llm_provider.ixx         # provider 接口（合并 model + client）
+    provider_registry.ixx    # provider 注册表（线程安全）
+    openai_provider/         # OpenAI 实现
+      openai_provider.ixx
+      openai_provider.cpp
+  message/
+  context/
+
+app/
+  main.cpp                   # CLI 入口
+
+tests/
+  test_*.cpp                 # 单元测试
 ```
 
-## Workflow Conventions
+## 构建
 
-- **main branch**: All development happens here. No long-lived feature branches.
-- **Tests live with code**: `tests/` is part of main, not a separate branch.
-- **Commit format**: `type: description` (e.g., `feat:`, `fix:`, `test:`, `refactor:`)
-- **CI/CD**: GitHub Actions runs build + tests on every push/PR.
-
-## Development
-
-### Prerequisites
-- Visual Studio 2022 (C++20 Modules support)
-- CMake 3.28+
-- vcpkg (nlohmann_json, curl, etc.)
-
-### Build
-```powershell
-cmake -B out/build/x64-Debug -S . -G "Visual Studio 17 2022" -A x64
-cmake --build out/build/x64-Debug --config Debug
+```bash
+cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=D:\vcpkg\scripts\buildsystems\vcpkg.cmake
+cmake --build build --config Release
 ```
 
-### Run Tests
-```powershell
-cd out/build/x64-Debug
-ctest -C Debug
+## 测试
+
+```bash
+cd build
+ctest -C Release
 ```
 
-Or in Visual Studio: Test → Test Explorer → Run All.
+## 使用
 
-## Dependencies
+```cpp
+// 注册 provider
+provider_registry::instance().register_factory("openai", std::make_shared<openai_factory>());
 
-- nlohmann_json (vcpkg)
-- liboai (custom, D:/third_party/liboai)
-- Catch2 v3.14.0 (external/catch2)
+// 创建并使用
+auto provider = provider_registry::instance().create("openai");
+provider->set_config(config);
+auto result = provider->generate(ctx);
+std::cout << result.message->get_content() << "\n";
+```
+
+## 设置 API Key
+
+```bash
+set CPPGENT_API_KEY=sk-xxxxx   # Windows
+export CPPGENT_API_KEY=sk-xxxxx # Linux/Mac
+```

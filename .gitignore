@@ -1,9 +1,14 @@
-*.exe
+# .gitignore for cppagent
+/build/
+/out/
+/.vs/
+*.user
+*.suo
 *.pdb
 *.ilk
 *.obj
-/out/
-/out/build/
-/.vs/
-CMakeUserPresets.json
-/external/
+*.exe
+*.dll
+*.lib
+*.exp
+/external/catch2/

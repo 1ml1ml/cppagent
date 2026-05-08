@@ -58,4 +58,3 @@ TEST_CASE("message attachment 操作", "[message]")
   msg->clear_attachments();
   REQUIRE(msg->attachments().empty());
 }
-
