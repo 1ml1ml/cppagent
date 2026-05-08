@@ -1,0 +1,8 @@
+*.exe
+*.pdb
+*.ilk
+*.obj
+/out/
+/out/build/
+/.vs/
+CMakeUserPresets.json
