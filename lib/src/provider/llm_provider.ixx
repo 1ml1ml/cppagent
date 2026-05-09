@@ -28,38 +28,45 @@ export struct tool_call
   std::string function_name{};
 };
 
-export class generation_result_base
+export class model_response
 {
 public:
-  virtual ~generation_result_base() = default;
+  virtual ~model_response() = default;
 
+public:
+  virtual void apply_to_context(const context_shared_ptr& ctx) const = 0;
+
+public:
   std::string id{};
   std::string model{};
 };
-export using generation_result_shared_ptr = std::shared_ptr<generation_result_base>;
+export using model_response_shared_ptr = std::shared_ptr<model_response>;
 
-export class text_result : public generation_result_base
+export class model_text_response : public model_response
 {
 public:
-  usage_info usage{};
-  std::string finish_reason{};  // "stop" / "length"
-  message_shared_ptr message{};
+  bool is_truncated() const;
+  void apply_to_context(const context_shared_ptr& ctx) const override;
 
-  bool is_truncated() const
-  {
-    return finish_reason == "length";
-  }
+public:
+  usage_info usage{};
+  std::string finish_reason{};
+  message_shared_ptr message{};
 };
 
-export class tool_result : public generation_result_base
+export class model_tool_call_response : public model_response
 {
 public:
+  void apply_to_context(const context_shared_ptr& ctx) const override;
+
+public:
   usage_info usage{};
-  message_shared_ptr message{};  // 可选：思考过程（如 CoT）
+  std::string finish_reason{};
+  message_shared_ptr reasoning{};
   std::vector<tool_call> tool_calls{};
 };
 
-export using stream_callback = std::function<bool(std::string data)>;
+export using stream_callback = std::function<bool(std::string)>;
 
 class llm_provider;
 export using provider_unique_ptr = std::unique_ptr<llm_provider>;
@@ -72,8 +79,8 @@ public:
   virtual nlohmann::json get_config() const = 0;
   virtual void set_config(const nlohmann::json& config) = 0;
 
-  virtual generation_result_shared_ptr generate( const context_shared_ptr& ctx, const stream_callback& callback = {}) = 0;
-  virtual std::future<generation_result_shared_ptr> generate_async( const context_shared_ptr& ctx, const stream_callback& callback = {}) = 0;
+  virtual model_response_shared_ptr generate( const context_shared_ptr& ctx, const stream_callback& callback = {}) = 0;
+  virtual std::future<model_response_shared_ptr> generate_async( const context_shared_ptr& ctx, const stream_callback& callback = {}) = 0;
 };
 
 class llm_provider_factory;

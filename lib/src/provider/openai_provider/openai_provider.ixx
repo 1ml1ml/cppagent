@@ -21,8 +21,8 @@ public:
   nlohmann::json get_config() const override;
   void set_config(const nlohmann::json& config) override;
 
-  generation_result_shared_ptr generate( const context_shared_ptr& ctx, const stream_callback& callback = {}) override;
-  std::future<generation_result_shared_ptr> generate_async( const context_shared_ptr& ctx, const stream_callback& callback = {}) override;
+  model_response_shared_ptr generate( const context_shared_ptr& ctx, const stream_callback& callback = {}) override;
+  std::future<model_response_shared_ptr> generate_async( const context_shared_ptr& ctx, const stream_callback& callback = {}) override;
 
 private:
   class impl;

@@ -21,6 +21,7 @@ target_sources(cppagent_lib
 target_sources(cppagent_lib
 	PRIVATE
 		"src/mimetypes.hpp"
+		"src/provider/llm_provider.cpp"
 		"src/provider/provider_registry.cpp"
 		"src/provider/openai_provider/openai_provider.cpp"
 		"src/context/context.cpp"
