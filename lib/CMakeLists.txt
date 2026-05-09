@@ -6,6 +6,7 @@ target_include_directories(cppagent_lib PUBLIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/provider/openai_provider/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/message/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/context/"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/mcp/"
 )
 
 target_sources(cppagent_lib
@@ -16,6 +17,7 @@ target_sources(cppagent_lib
 		"src/provider/openai_provider/openai_provider.ixx"
 		"src/message/message.ixx"
 		"src/context/context.ixx"
+		"src/mcp/jsonrpc.ixx"
 )
 
 target_sources(cppagent_lib
@@ -26,6 +28,7 @@ target_sources(cppagent_lib
 		"src/provider/openai_provider/openai_provider.cpp"
 		"src/context/context.cpp"
 		"src/message/message.cpp"
+		"src/mcp/jsonrpc.cpp"
 )
 
 target_link_libraries(cppagent_lib
