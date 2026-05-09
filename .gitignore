@@ -13,3 +13,6 @@
 *.exp
 /external/catch2/
 /docs/
+
+# secrets
+api_key.txt

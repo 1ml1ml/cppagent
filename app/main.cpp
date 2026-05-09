@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 
 #include <Windows.h>
@@ -10,6 +11,19 @@ import llm_provider;
 import openai_provider;
 import provider_registry;
 
+std::string load_api_key(const std::string& path)
+{
+  std::ifstream file{ path };
+  if (!file.is_open())
+  {
+    return {};
+  }
+
+  std::string key{};
+  std::getline(file, key);
+  return key;
+}
+
 int main()
 {
   SetConsoleOutputCP(CP_UTF8);
@@ -17,7 +31,7 @@ int main()
   nlohmann::json config{};
   config["model"] = "moonshot-v1-8k";
   config["base_url"] = "https://api.moonshot.cn/v1";
-  config["api_key"] = "sk-pqXemyN0WzTTQ0GUSJm0BG8awWjtgpJZiWeTLovguC7NmXW2";
+  config["api_key"] = load_api_key("api_key.txt");
 
   provider_registry::instance().register_factory( "openai", std::make_shared<openai_factory>() );
   auto provider{ provider_registry::instance().create("openai") };
