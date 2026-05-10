@@ -1,6 +1,5 @@
 module;
 
-#include <memory>
 #include <string>
 
 module llm_provider;
@@ -8,12 +7,12 @@ module llm_provider;
 import context;
 import message;
 
-bool model_text_response::is_truncated() const
+bool model_normal_response::is_truncated() const
 {
 	return finish_reason == "length";
 }
 
-void model_text_response::apply_to_context(const context_shared_ptr& ctx) const
+void model_normal_response::apply_to_context(const context_shared_ptr& ctx) const
 {
 	ctx->append(message);
 }

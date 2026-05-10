@@ -11,7 +11,7 @@ import message;
 class context;
 export using context_shared_ptr = std::shared_ptr<context>;
 
-export class context final : public std::enable_shared_from_this<context>
+export class context : public std::enable_shared_from_this<context>
 {
 public:
   context();

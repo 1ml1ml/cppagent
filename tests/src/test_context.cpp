@@ -83,8 +83,8 @@ TEST_CASE("context messages 返回值拷贝", "[context]")
   auto ctx{std::make_shared<context>()};
   ctx->append(std::make_shared<message>(message::role::user, "hello"sv));
 
-  auto msgs1 = ctx->messages();
-  auto msgs2 = ctx->messages();
+  auto msgs1{ ctx->messages() };
+  auto msgs2{ ctx->messages() };
 
   REQUIRE(msgs1.size() == 1);
   REQUIRE(msgs2.size() == 1);

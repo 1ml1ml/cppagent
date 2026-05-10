@@ -23,7 +23,7 @@ export struct usage_info
 export struct tool_call
 {
   std::string id{};
-  std::string type{};           // "function"
+  std::string type{};
   nlohmann::json arguments{};
   std::string function_name{};
 };
@@ -39,19 +39,18 @@ public:
 public:
   std::string id{};
   std::string model{};
+  std::string finish_reason{};
+
+  usage_info usage{};
+  message_shared_ptr message{};
 };
 export using model_response_shared_ptr = std::shared_ptr<model_response>;
 
-export class model_text_response : public model_response
+export class model_normal_response : public model_response
 {
 public:
   bool is_truncated() const;
   void apply_to_context(const context_shared_ptr& ctx) const override;
-
-public:
-  usage_info usage{};
-  std::string finish_reason{};
-  message_shared_ptr message{};
 };
 
 export class model_tool_call_response : public model_response
@@ -60,19 +59,17 @@ public:
   void apply_to_context(const context_shared_ptr& ctx) const override;
 
 public:
-  usage_info usage{};
-  std::string finish_reason{};
-  message_shared_ptr reasoning{};
   std::vector<tool_call> tool_calls{};
 };
-
-export using stream_callback = std::function<bool(std::string)>;
 
 class llm_provider;
 export using provider_unique_ptr = std::unique_ptr<llm_provider>;
 
 export class llm_provider
 {
+public:
+	using stream_callback = std::function<bool(std::string)>;
+
 public:
   virtual ~llm_provider() = default;
 

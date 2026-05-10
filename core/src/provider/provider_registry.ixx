@@ -8,7 +8,7 @@ export module provider_registry;
 
 import llm_provider;
 
-export class provider_registry final
+export class provider_registry
 {
 public:
   static provider_registry& instance();

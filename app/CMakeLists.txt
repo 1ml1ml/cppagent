@@ -1,2 +1,2 @@
 add_executable(cppagent main.cpp)
-target_link_libraries(cppagent PRIVATE cppagent_lib)
+target_link_libraries(cppagent PRIVATE cppagent_core)

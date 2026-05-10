@@ -3,8 +3,8 @@ module;
 #include <algorithm>
 #include <functional>
 #include <future>
-#include <iostream>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <stdexcept>
 #include <string>
@@ -92,25 +92,31 @@ std::vector<std::string> openai_provider::impl::split_chunk(const std::string& d
 
 model_response_shared_ptr openai_provider::impl::model_response_from_json(const nlohmann::json& response_json)
 {
-	if (!response_json.contains("choices") || response_json["choices"].empty())
-	{
-		return std::make_shared<model_text_response>();
-	}
+	model_response_shared_ptr result{};
 
 	auto& choice{ response_json["choices"][0] };
-	auto& messages{ choice["messages"] };
+	auto finish_reason{ choice["finish_reason"].get<std::string>() };
 
-	auto result{ std::make_shared<model_text_response>() };
+	if ( finish_reason == "tool_call")
+	{
+		auto tool_call_response{ std::make_shared<model_tool_call_response>() };
+		result = tool_call_response;
+	}
+	else
+	{
+		result = std::make_shared<model_normal_response>();
+	}
 
+	result->finish_reason = finish_reason;
 	result->id = response_json["id"].get<std::string>();
 	result->model = response_json["model"].get<std::string>();
-	result->finish_reason = choice["finish_reason"].get<std::string>();
 
 	auto& usage{ response_json["usage"] };
 	result->usage.prompt_tokens = usage["prompt_tokens"].get<int>();
 	result->usage.completion_tokens = usage["completion_tokens"].get<int>();
 	result->usage.total_tokens = usage["total_tokens"].get<int>();
 
+	auto& messages{ choice["messages"] };
 	result->message = std::make_shared<message>(message::role::assistant, messages["content"].get<std::string>());
 
 	return result;
@@ -163,9 +169,8 @@ bool openai_provider::impl::on_stream_callback(const std::string& data, intptr_t
 	return callback(data);
 }
 
-openai_provider::openai_provider()
-	: llm_provider(),
-	impl{ std::make_unique<class impl>() }
+openai_provider::openai_provider() : llm_provider(),
+impl{ std::make_unique<class impl>() }
 {
 }
 

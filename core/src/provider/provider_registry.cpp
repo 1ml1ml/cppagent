@@ -1,11 +1,10 @@
 module;
 
 #include <map>
-#include <memory>
-#include <shared_mutex>
-#include <stdexcept>
 #include <string>
 #include <vector>
+#include <stdexcept>
+#include <shared_mutex>
 
 module provider_registry;
 

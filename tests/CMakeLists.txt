@@ -1,18 +1,19 @@
-add_executable(cppagent_tests)
+add_executable(tests)
 
-target_sources(cppagent_tests
+target_sources(tests
 	PRIVATE
-		test_message.cpp
-		test_context.cpp
-		test_provider_registry.cpp
-		test_openai_provider.cpp
+		"src/test_message.cpp"
+		"src/test_context.cpp"
+		"src/test_provider_registry.cpp"
+		"src/test_openai_provider.cpp"
+		"src/test_mcp_client.cpp"
 )
 
-target_link_libraries(cppagent_tests
+target_link_libraries(tests
 	PRIVATE
-		cppagent_lib
+		cppagent_core
 		Catch2::Catch2WithMain
 )
 
 include(Catch)
-catch_discover_tests(cppagent_tests)
+catch_discover_tests(tests)

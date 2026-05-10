@@ -14,7 +14,7 @@ export module message;
 class message;
 export using message_shared_ptr = std::shared_ptr<message>;
 
-export class message final : public std::enable_shared_from_this<message>
+export class message : public std::enable_shared_from_this<message>
 {
 public:
 	enum class role
@@ -26,7 +26,7 @@ public:
 	};
 	static const char* role_to_string(role r) noexcept;
 
-	struct attachment final
+	struct attachment
 	{
 	public:
 		static std::optional<attachment> from_file(const std::filesystem::path& path);
