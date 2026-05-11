@@ -275,6 +275,20 @@ void stdio_transport::close()
 
 	impl->connected = false;
 
+	// 先关 stdin，让 server 收到 EOF 有机会优雅退出
+	if (impl->stdin_write != nullptr)
+	{
+		CloseHandle(impl->stdin_write);
+		impl->stdin_write = nullptr;
+	}
+
+	// 给 server 一点时间处理 EOF 并退出
+	if (impl->proc_info.hProcess != nullptr)
+	{
+		WaitForSingleObject(impl->proc_info.hProcess, 200);
+	}
+
+	// 再强制终止（如果还没退出的话）
 	if (impl->proc_info.hProcess != nullptr)
 	{
 		TerminateProcess(impl->proc_info.hProcess, 1);
@@ -286,12 +300,6 @@ void stdio_transport::close()
 	{
 		CloseHandle(impl->proc_info.hThread);
 		impl->proc_info.hThread = nullptr;
-	}
-
-	if (impl->stdin_write != nullptr)
-	{
-		CloseHandle(impl->stdin_write);
-		impl->stdin_write = nullptr;
 	}
 
 	if (impl->stdout_read != nullptr)

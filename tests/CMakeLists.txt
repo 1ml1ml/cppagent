@@ -7,6 +7,7 @@ target_sources(tests
 		"src/test_provider_registry.cpp"
 		"src/test_openai_provider.cpp"
 		"src/test_mcp_client.cpp"
+		"src/test_mcp_manager.cpp"
 )
 
 target_link_libraries(tests
