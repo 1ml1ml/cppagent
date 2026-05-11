@@ -5,6 +5,7 @@ module;
 #include <future>
 #include <variant>
 #include <expected>
+#include <string_view>
 #include <type_traits>
 #include <shared_mutex>
 
@@ -91,7 +92,7 @@ mcp_client::mcp_client(transport_unique_ptr&& transport)
 
 mcp_client::~mcp_client() = default;
 
-std::string mcp_client::get_name() const
+std::string_view mcp_client::get_name() const
 {
 	return impl->name;
 }
@@ -101,7 +102,7 @@ void mcp_client::set_name(const std::string_view& name)
 	impl->name = name;
 }
 
-std::string mcp_client::get_version() const
+std::string_view mcp_client::get_version() const
 {
 	return impl->version;
 }
@@ -129,6 +130,7 @@ void mcp_client::initialize(const std::chrono::milliseconds& timeout)
 	req.params["protocolVersion"] = "2024-11-05";
 	req.params["clientInfo"]["name"] = impl->name;
 	req.params["clientInfo"]["version"] = impl->version;
+	req.params["capabilities"]["roots"]["listChanged"] = false;
 
 	auto response{ impl->send(req, timeout) };
 	if (!response.payload.has_value())
@@ -173,7 +175,7 @@ std::vector<tool_info> mcp_client::list_tools(const std::chrono::milliseconds& t
 	return tools;
 }
 
-tool_result mcp_client::call_tool(const std::string& name, const nlohmann::json& arguments, const std::chrono::milliseconds& timeout)
+tool_result mcp_client::call_tool(const std::string_view& name, const nlohmann::json& arguments, const std::chrono::milliseconds& timeout)
 {
 	if (!impl->initialized)
 	{
@@ -240,7 +242,7 @@ std::vector<resource_info> mcp_client::list_resources(const std::chrono::millise
 	return resources;
 }
 
-std::vector<resource_content> mcp_client::read_resource(const std::string& uri, const std::chrono::milliseconds& timeout)
+std::vector<resource_content> mcp_client::read_resource(const std::string_view& uri, const std::chrono::milliseconds& timeout)
 {
 	if (!impl->initialized)
 	{

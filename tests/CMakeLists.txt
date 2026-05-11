@@ -2,6 +2,7 @@ add_executable(tests)
 
 target_sources(tests
 	PRIVATE
+		"src/test_listener.cpp"
 		"src/test_message.cpp"
 		"src/test_context.cpp"
 		"src/test_provider_registry.cpp"

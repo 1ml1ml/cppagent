@@ -20,7 +20,7 @@ static std::vector<std::string> make_fs_args()
 TEST_CASE("mcp_client: initialize with real filesystem server", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  REQUIRE_NOTHROW(client.initialize(std::chrono::seconds{ 30 }));
+  REQUIRE_NOTHROW(client.initialize(std::chrono::seconds{ 5 }));
   REQUIRE_THROWS_AS(client.initialize(std::chrono::seconds{ 1 }), std::runtime_error);
 }
 
@@ -28,7 +28,7 @@ TEST_CASE("mcp_client: initialize with env vars", "[mcp_client][integration]")
 {
   std::map<std::string, std::string> env{ {"TEST_VAR", "test_value"} };
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args(), env) };
-  REQUIRE_NOTHROW(client.initialize(std::chrono::seconds{ 30 }));
+  REQUIRE_NOTHROW(client.initialize(std::chrono::seconds{ 5 }));
 }
 
 TEST_CASE("mcp_client: name and version", "[mcp_client][integration]")
@@ -45,7 +45,7 @@ TEST_CASE("mcp_client: name and version", "[mcp_client][integration]")
 TEST_CASE("mcp_client: list_tools with real filesystem server", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.initialize(std::chrono::seconds{ 30 });
+  client.initialize(std::chrono::seconds{ 5 });
 
   auto tools{ client.list_tools(std::chrono::seconds{ 5 }) };
   REQUIRE(!tools.empty());
@@ -61,7 +61,7 @@ TEST_CASE("mcp_client: list_tools with real filesystem server", "[mcp_client][in
 TEST_CASE("mcp_client: call_tool with real filesystem server", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.initialize(std::chrono::seconds{ 30 });
+  client.initialize(std::chrono::seconds{ 5 });
 
   auto tools{ client.list_tools(std::chrono::seconds{ 5 }) };
   REQUIRE(!tools.empty());
@@ -78,7 +78,7 @@ TEST_CASE("mcp_client: call_tool with real filesystem server", "[mcp_client][int
 TEST_CASE("mcp_client: list_resources attempt", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.initialize(std::chrono::seconds{ 30 });
+  client.initialize(std::chrono::seconds{ 5 });
 
   try
   {
@@ -98,7 +98,7 @@ TEST_CASE("mcp_client: list_resources attempt", "[mcp_client][integration]")
 TEST_CASE("mcp_client: read_resource attempt", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.initialize(std::chrono::seconds{ 30 });
+  client.initialize(std::chrono::seconds{ 5 });
 
   try
   {

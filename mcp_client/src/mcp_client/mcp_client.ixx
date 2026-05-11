@@ -1,10 +1,11 @@
 module;
 
 #include <chrono>
-#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
+#include <functional>
+#include <string_view>
 
 #include "nlohmann/json.hpp"
 
@@ -55,19 +56,19 @@ public:
   ~mcp_client();
 
 public:
-	std::string get_name() const;
+	std::string_view get_name() const;
 	void set_name(const std::string_view& name);
 
-  std::string get_version() const;
+  std::string_view get_version() const;
 	void set_version(const std::string_view& version);
 
   void initialize(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
 
   std::vector<tool_info> list_tools(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
-  tool_result call_tool(const std::string& name, const nlohmann::json& arguments, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
+  tool_result call_tool(const std::string_view& name, const nlohmann::json& arguments, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
 
   std::vector<resource_info> list_resources(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
-  std::vector<resource_content> read_resource(const std::string& uri, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
+  std::vector<resource_content> read_resource(const std::string_view& uri, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
 
 private:
   class impl;
