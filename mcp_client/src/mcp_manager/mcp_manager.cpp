@@ -31,20 +31,6 @@ void mcp_manager::load(const nlohmann::json& config)
 		auto client{ std::make_shared<mcp_client>(std::make_unique<stdio_transport>(server_config["command"].get<std::string>(), server_config.value("args", std::vector<std::string>{}), server_config.value("env", std::map<std::string, std::string>{}))) };
 		client->set_name("cppagent.exe");
 		client->set_version("1.0");
-
-		if (server_config.contains("roots"))
-		{
-			nlohmann::json roots{ nlohmann::json::array() };
-			for (const auto& path : server_config["roots"])
-			{
-				nlohmann::json item{};
-				item["uri"] = "file:///" + path.get<std::string>();
-				item["name"] = path.get<std::string>();
-				roots.push_back(std::move(item));
-			}
-			client->set_roots(roots);
-		}
-
 		client->initialize();
 		impl->clients[server_name] = client;
   }

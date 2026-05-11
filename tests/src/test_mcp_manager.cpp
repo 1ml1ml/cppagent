@@ -14,7 +14,6 @@ static nlohmann::json make_test_config()
   nlohmann::json config{};
   config["mcpServers"]["filesystem"]["command"] = "cmd";
   config["mcpServers"]["filesystem"]["args"] = std::vector<std::string>{"/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "D:/Sources/cppagent/tests"};
-  config["mcpServers"]["filesystem"]["roots"] = std::vector<std::string>{"D:/Sources/cppagent/tests"};
   return config;
 }
 

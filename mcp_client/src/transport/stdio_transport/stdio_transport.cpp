@@ -70,8 +70,7 @@ std::string stdio_transport::impl::build_env_block(std::map<std::string, std::st
 			auto len{ std::strlen(index) };
 			std::string entry{ index, len };
 
-			auto pos{ entry.find('=') };
-			if (pos != std::string::npos && pos > 0)
+			if (auto pos{ entry.find('=') }; pos != std::string::npos && pos > 0)
 			{
 				if (auto name{ entry.substr(0, pos) }; !envs.contains(name))
 				{

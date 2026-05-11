@@ -28,8 +28,8 @@ static nlohmann::json make_default_roots()
 TEST_CASE("mcp_client: initialize with real filesystem server", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.set_roots(make_default_roots());
   REQUIRE_NOTHROW(client.initialize(std::chrono::seconds{ 30 }));
+  client.set_roots(make_default_roots());
   REQUIRE_THROWS_AS(client.initialize(std::chrono::seconds{ 1 }), std::runtime_error);
 }
 
@@ -37,7 +37,6 @@ TEST_CASE("mcp_client: initialize with env vars", "[mcp_client][integration]")
 {
   std::map<std::string, std::string> env{ {"TEST_VAR", "test_value"} };
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args(), env) };
-  client.set_roots(make_default_roots());
   REQUIRE_NOTHROW(client.initialize(std::chrono::seconds{ 30 }));
 }
 
@@ -55,7 +54,6 @@ TEST_CASE("mcp_client: name and version", "[mcp_client][integration]")
 TEST_CASE("mcp_client: list_tools with real filesystem server", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.set_roots(make_default_roots());
   client.initialize(std::chrono::seconds{ 30 });
 
   auto tools{ client.list_tools(std::chrono::seconds{ 5 }) };
@@ -72,7 +70,6 @@ TEST_CASE("mcp_client: list_tools with real filesystem server", "[mcp_client][in
 TEST_CASE("mcp_client: call_tool with real filesystem server", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.set_roots(make_default_roots());
   client.initialize(std::chrono::seconds{ 30 });
 
   auto tools{ client.list_tools(std::chrono::seconds{ 5 }) };
@@ -90,7 +87,6 @@ TEST_CASE("mcp_client: call_tool with real filesystem server", "[mcp_client][int
 TEST_CASE("mcp_client: roots get/set", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.set_roots(make_default_roots());
   client.initialize(std::chrono::seconds{ 30 });
 
   REQUIRE(client.get_roots().is_array());
@@ -107,7 +103,6 @@ TEST_CASE("mcp_client: roots get/set", "[mcp_client][integration]")
 TEST_CASE("mcp_client: roots change notification after initialized", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.set_roots(make_default_roots());
   client.initialize(std::chrono::seconds{ 30 });
 
   nlohmann::json roots1{ nlohmann::json::array() };
@@ -137,8 +132,8 @@ TEST_CASE("mcp_client: set_roots rejects non-array", "[mcp_client]")
 TEST_CASE("mcp_client: list_resources attempt", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.set_roots(make_default_roots());
   client.initialize(std::chrono::seconds{ 30 });
+  client.set_roots(make_default_roots());
 
   // filesystem server 可能不支持 resources，调用本身不崩溃即可
   try
@@ -160,8 +155,8 @@ TEST_CASE("mcp_client: list_resources attempt", "[mcp_client][integration]")
 TEST_CASE("mcp_client: read_resource attempt", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.set_roots(make_default_roots());
   client.initialize(std::chrono::seconds{ 30 });
+  client.set_roots(make_default_roots());
 
   // 尝试读取一个 URI；filesystem server 通常不支持 resources
   try
