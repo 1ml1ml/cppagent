@@ -19,9 +19,7 @@ class mcp_client::impl
 public:
 	jsonrpc_response send(const jsonrpc_request& req, const std::chrono::milliseconds& timeout);
 
-	void handle_request(const jsonrpc_request& req);
 	void handle_response(const jsonrpc_response& resp);
-	void handle_notification(const jsonrpc_notification& notify);
 
 public:
 	std::string name{};
@@ -34,8 +32,6 @@ public:
 
 	std::shared_mutex pending_responses_mutex{};
 	std::map<std::int64_t, std::promise<jsonrpc_response>> pending_responses{};
-
-	nlohmann::json roots{ nlohmann::json::array() };
 };
 
 jsonrpc_response mcp_client::impl::send(const jsonrpc_request& req, const std::chrono::milliseconds& timeout)
@@ -59,24 +55,6 @@ jsonrpc_response mcp_client::impl::send(const jsonrpc_request& req, const std::c
 	return response_future.get();
 }
 
-void mcp_client::impl::handle_request(const jsonrpc_request& req)
-{
-	if (req.method == "roots/list")
-	{
-		jsonrpc_response resp{};
-		resp.id = req.id;
-		resp.payload = nlohmann::json{ {"roots", roots} };
-		transport->send(resp);
-	}
-	else
-	{
-		jsonrpc_response resp{};
-		resp.id = req.id;
-		resp.payload = std::unexpected{ jsonrpc_error{ -32601, "Method not found: " + req.method } };
-		transport->send(resp);
-	}
-}
-
 void mcp_client::impl::handle_response(const jsonrpc_response& resp)
 {
 	std::shared_lock lock{ pending_responses_mutex };
@@ -84,10 +62,6 @@ void mcp_client::impl::handle_response(const jsonrpc_response& resp)
 	{
 		it->second.set_value(resp);
 	}
-}
-
-void mcp_client::impl::handle_notification(const jsonrpc_notification& notify)
-{
 }
 
 mcp_client::mcp_client(transport_unique_ptr&& transport)
@@ -103,15 +77,13 @@ mcp_client::mcp_client(transport_unique_ptr&& transport)
 					if constexpr (std::derived_from<T, jsonrpc_response>)
 					{
 						impl->handle_response(jsonrpc);
-						
+
 					}
 					else if constexpr (std::derived_from<T, jsonrpc_request>)
 					{
-						impl->handle_request(jsonrpc);
 					}
 					else if constexpr (std::derived_from<T, jsonrpc_notification>)
 					{
-						impl->handle_notification(jsonrpc);
 					}
 				}, msg);
 		});
@@ -155,7 +127,6 @@ void mcp_client::initialize(const std::chrono::milliseconds& timeout)
 	req.id = impl->next_request_id.fetch_add(1, std::memory_order_relaxed);
 	req.method = "initialize";
 	req.params["protocolVersion"] = "2024-11-05";
-	req.params["capabilities"]["roots"]["listChanged"] = true;
 	req.params["clientInfo"]["name"] = impl->name;
 	req.params["clientInfo"]["version"] = impl->version;
 
@@ -312,26 +283,4 @@ std::vector<resource_content> mcp_client::read_resource(const std::string& uri, 
 	}
 
 	return contents;
-}
-
-void mcp_client::set_roots(const nlohmann::json& roots)
-{
-	if (!roots.is_array())
-	{
-		throw std::runtime_error{ "Roots must be a JSON array" };
-	}
-
-	if (impl->roots != roots)
-	{
-		impl->roots = roots;
-
-		jsonrpc_notification notify{};
-		notify.method = "notifications/roots/list_changed";
-		impl->transport->send(notify);
-	}
-}
-
-nlohmann::json mcp_client::get_roots() const
-{
-	return impl->roots;
 }

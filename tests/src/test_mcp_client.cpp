@@ -4,7 +4,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <iostream>
 #include <map>
 
 #include "nlohmann/json.hpp"
@@ -18,18 +17,10 @@ static std::vector<std::string> make_fs_args()
   return { "/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "D:/Sources/cppagent/tests" };
 }
 
-static nlohmann::json make_default_roots()
-{
-  nlohmann::json roots{ nlohmann::json::array() };
-  roots.push_back({ {"uri", "file:///D:/Sources/cppagent/tests"}, {"name", "tests"} });
-  return roots;
-}
-
 TEST_CASE("mcp_client: initialize with real filesystem server", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
   REQUIRE_NOTHROW(client.initialize(std::chrono::seconds{ 30 }));
-  client.set_roots(make_default_roots());
   REQUIRE_THROWS_AS(client.initialize(std::chrono::seconds{ 1 }), std::runtime_error);
 }
 
@@ -84,58 +75,11 @@ TEST_CASE("mcp_client: call_tool with real filesystem server", "[mcp_client][int
   REQUIRE(!result.content.empty());
 }
 
-TEST_CASE("mcp_client: roots get/set", "[mcp_client][integration]")
-{
-  mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.initialize(std::chrono::seconds{ 30 });
-
-  REQUIRE(client.get_roots().is_array());
-  REQUIRE(client.get_roots().empty());
-
-  nlohmann::json new_roots{ nlohmann::json::array() };
-  new_roots.push_back({ {"uri", "file:///home/user/project"}, {"name", "project"} });
-
-  client.set_roots(new_roots);
-  REQUIRE(client.get_roots().size() == 1);
-  REQUIRE(client.get_roots()[0]["uri"] == "file:///home/user/project");
-}
-
-TEST_CASE("mcp_client: roots change notification after initialized", "[mcp_client][integration]")
-{
-  mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-  client.initialize(std::chrono::seconds{ 30 });
-
-  nlohmann::json roots1{ nlohmann::json::array() };
-  roots1.push_back({ {"uri", "file:///a"}, {"name", "a"} });
-
-  // 第一次设置应触发 list_changed notification（不抛异常即可）
-  REQUIRE_NOTHROW(client.set_roots(roots1));
-
-  // 相同值重复设置不应触发 notification
-  REQUIRE_NOTHROW(client.set_roots(roots1));
-
-  nlohmann::json roots2{ nlohmann::json::array() };
-  roots2.push_back({ {"uri", "file:///b"}, {"name", "b"} });
-
-  // 不同值应触发 notification
-  REQUIRE_NOTHROW(client.set_roots(roots2));
-}
-
-TEST_CASE("mcp_client: set_roots rejects non-array", "[mcp_client]")
-{
-  mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
-
-  nlohmann::json bad{ {"not", "array"} };
-  REQUIRE_THROWS_AS(client.set_roots(bad), std::runtime_error);
-}
-
 TEST_CASE("mcp_client: list_resources attempt", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
   client.initialize(std::chrono::seconds{ 30 });
-  client.set_roots(make_default_roots());
 
-  // filesystem server 可能不支持 resources，调用本身不崩溃即可
   try
   {
     auto resources{ client.list_resources(std::chrono::seconds{ 5 }) };
@@ -147,7 +91,6 @@ TEST_CASE("mcp_client: list_resources attempt", "[mcp_client][integration]")
   }
   catch (const std::runtime_error&)
   {
-    // server 不支持 resources 是可接受的
     REQUIRE(true);
   }
 }
@@ -156,9 +99,7 @@ TEST_CASE("mcp_client: read_resource attempt", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", make_fs_args()) };
   client.initialize(std::chrono::seconds{ 30 });
-  client.set_roots(make_default_roots());
 
-  // 尝试读取一个 URI；filesystem server 通常不支持 resources
   try
   {
     auto contents{ client.read_resource("file:///D:/Sources/cppagent/tests/test_message.cpp", std::chrono::seconds{ 5 }) };
@@ -169,7 +110,6 @@ TEST_CASE("mcp_client: read_resource attempt", "[mcp_client][integration]")
   }
   catch (const std::runtime_error&)
   {
-    // server 不支持 resources 是可接受的
     REQUIRE(true);
   }
 }

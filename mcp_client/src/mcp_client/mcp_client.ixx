@@ -69,9 +69,6 @@ public:
   std::vector<resource_info> list_resources(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
   std::vector<resource_content> read_resource(const std::string& uri, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
 
-  void set_roots(const nlohmann::json& roots);
-  nlohmann::json get_roots() const;
-
 private:
   class impl;
   std::unique_ptr<impl> impl{};
