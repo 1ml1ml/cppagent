@@ -36,7 +36,6 @@ TEST_CASE("mcp_manager: load and get_tools_schema", "[mcp_manager][integration]"
     auto name{ tool["function"]["name"].get<std::string>() };
     REQUIRE(!name.empty());
 
-    // 验证 server/tool 前缀格式
     if (name.find("filesystem/") == 0)
     {
       found_prefixed = true;

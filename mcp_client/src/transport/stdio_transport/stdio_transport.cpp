@@ -4,9 +4,10 @@
 #include <vector>
 #include <thread>
 #include <variant>
+#include <cstring>
 #include <stdexcept>
 
-#include <cstring>
+#include <iostream>
 
 #include <windows.h>
 
@@ -158,8 +159,10 @@ void stdio_transport::impl::start_receive_thread()
 		{
 			DWORD read{};
 			char buf[4096]{};
+			std::cout << "Waiting for output..." << std::endl;
 			if (ReadFile(stdout_read, buf, sizeof(buf), &read, nullptr) || read == 0)
 			{
+				std::cout << "Read " << read << " bytes" << std::endl;
 				read_buffer.append(buf, read);
 
 				while (connected)
@@ -272,6 +275,8 @@ void stdio_transport::close()
 		return;
 	}
 
+	std::cout << "close in" << std::endl;
+
 	impl->connected = false;
 
 	if (impl->stdin_write != nullptr)
@@ -280,14 +285,23 @@ void stdio_transport::close()
 		impl->stdin_write = nullptr;
 	}
 
-	if (impl->proc_info.hProcess != nullptr)
+	if (impl->read_thread.joinable())
 	{
-		WaitForSingleObject(impl->proc_info.hProcess, 200);
+		CancelSynchronousIo(impl->read_thread.native_handle());
+		impl->read_thread.join();
+	}
+
+	if (impl->stdout_read != nullptr)
+	{
+		CloseHandle(impl->stdout_read);
+		impl->stdout_read = nullptr;
 	}
 
 	if (impl->proc_info.hProcess != nullptr)
 	{
 		TerminateProcess(impl->proc_info.hProcess, 1);
+		WaitForSingleObject(impl->proc_info.hProcess, INFINITE);
+
 		CloseHandle(impl->proc_info.hProcess);
 		impl->proc_info.hProcess = nullptr;
 	}
@@ -298,14 +312,5 @@ void stdio_transport::close()
 		impl->proc_info.hThread = nullptr;
 	}
 
-	if (impl->stdout_read != nullptr)
-	{
-		CloseHandle(impl->stdout_read);
-		impl->stdout_read = nullptr;
-	}
-
-	if (impl->read_thread.joinable())
-	{
-		impl->read_thread.join();
-	}
+	std::cout << "close out" << std::endl;
 }

@@ -33,7 +33,7 @@ int main()
   nlohmann::json config{};
   config["model"] = "moonshot-v1-8k";
   config["base_url"] = "https://api.moonshot.cn/v1";
-  config["api_key"] = load_api_key("api_key.txt");
+  config["api_key"] = load_api_key(R"(D:\Sources\cppagent\api_key.txt)");
 
   provider_registry::instance().register_factory( "openai", std::make_shared<openai_factory>() );
   auto provider{ provider_registry::instance().create("openai") };

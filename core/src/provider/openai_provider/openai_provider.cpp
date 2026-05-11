@@ -131,37 +131,40 @@ bool openai_provider::impl::on_stream_callback(const std::string& data, intptr_t
 
 	for (const auto& chunk : impl::split_chunk(data))
 	{
-		if (chunk != "data: [DONE]")
+		if (chunk.starts_with("data:"))
 		{
-			auto chunk_json{ nlohmann::json::parse(chunk.substr(5)) };
-			for (const auto& chunk_choice : chunk_json["choices"])
+			if (chunk != "data: [DONE]")
 			{
-				auto& response_choice{ response_root["choices"][chunk_choice["index"].get<std::size_t>()] };
-				response_choice["index"] = chunk_choice["index"];
-
-				auto& finish_reason{ chunk_choice["finish_reason"] };
-				response_choice["finish_reason"] = finish_reason;
-
-				if (!finish_reason.is_null())
+				auto chunk_json{ nlohmann::json::parse(chunk.substr(5)) };
+				for (const auto& chunk_choice : chunk_json["choices"])
 				{
-					response_root["usage"] = chunk_choice["usage"];
+					auto& response_choice{ response_root["choices"][chunk_choice["index"].get<std::size_t>()] };
+					response_choice["index"] = chunk_choice["index"];
 
-					response_root["id"] = chunk_json["id"];
-					response_root["model"] = chunk_json["model"];
-					response_root["object"] = chunk_json["object"];
-					response_root["created"] = chunk_json["created"];
-					response_root["system_fingerprint"] = chunk_json["system_fingerprint"];
-					continue;
-				}
+					auto& finish_reason{ chunk_choice["finish_reason"] };
+					response_choice["finish_reason"] = finish_reason;
 
-				auto& delta{ chunk_choice["delta"] };
-				auto& messages{ response_choice["messages"] };
+					if (!finish_reason.is_null())
+					{
+						response_root["usage"] = chunk_choice["usage"];
 
-				messages["content"] = (messages.contains("content") ? messages.value("content", "") : "") + delta["content"].get<std::string>();
+						response_root["id"] = chunk_json["id"];
+						response_root["model"] = chunk_json["model"];
+						response_root["object"] = chunk_json["object"];
+						response_root["created"] = chunk_json["created"];
+						response_root["system_fingerprint"] = chunk_json["system_fingerprint"];
+						continue;
+					}
 
-				if (delta.contains("role"))
-				{
-					messages["role"] = delta["role"];
+					auto& delta{ chunk_choice["delta"] };
+					auto& messages{ response_choice["messages"] };
+
+					messages["content"] = (messages.contains("content") ? messages.value("content", "") : "") + delta["content"].get<std::string>();
+
+					if (delta.contains("role"))
+					{
+						messages["role"] = delta["role"];
+					}
 				}
 			}
 		}
