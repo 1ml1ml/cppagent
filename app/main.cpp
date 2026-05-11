@@ -1,6 +1,7 @@
+#include <memory>
 #include <fstream>
 #include <iostream>
-#include <memory>
+#include <expected>
 
 #include <Windows.h>
 
@@ -45,7 +46,7 @@ int main()
   try
   {
     auto result = provider->generate(ctx, [](std::string) { return true; });
-    result->apply_to_context(ctx);
+    result->apply_to_context(ctx, nullptr);
     
     std::cout << *ctx << std::endl;
   }

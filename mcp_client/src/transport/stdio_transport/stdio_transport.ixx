@@ -1,5 +1,6 @@
 module;
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -11,7 +12,7 @@ import transport;
 export class stdio_transport : public transport
 {
 public:
-  stdio_transport(const std::string& command, const std::vector<std::string>& args);
+  stdio_transport(const std::string& command, const std::vector<std::string>& args, const std::map<std::string, std::string>& envs = {});
   ~stdio_transport();
 
 public:

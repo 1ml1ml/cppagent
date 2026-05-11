@@ -1,60 +1,152 @@
 # cppagent
 
-C++20 Modules + CMake project for LLM agent.
+C++23 LLM Agent Framework with MCP (Model Context Protocol) support.
 
-## 架构
+## Features
+
+- **C++23 Modules** — Modern modular C++ with `.ixx` interface units
+- **Multi-Provider LLM** — Pluggable provider registry (OpenAI-compatible APIs)
+- **MCP Client** — Full Model Context Protocol client implementation
+  - JSON-RPC 2.0 over stdio transport
+  - Multi-server management with `mcp_manager`
+  - Tool discovery and invocation with server namespacing (`server/tool`)
+  - Resource listing and reading
+  - Roots support with change notifications
+- **Cross-Platform** — Windows (MSVC) + Linux (WSL/GCC)
+- **CMake 3.28+** with vcpkg integration
+
+## Architecture
 
 ```
-lib/src/
-  core/
-    generation_result.ixx    # 生成结果结构（含 usage/token）
-    config_validator.ixx     # 配置校验
-  provider/
-    llm_provider.ixx         # provider 接口（合并 model + client）
-    provider_registry.ixx    # provider 注册表（线程安全）
-    openai_provider/         # OpenAI 实现
-      openai_provider.ixx
-      openai_provider.cpp
-  message/
-  context/
-
-app/
-  main.cpp                   # CLI 入口
-
-tests/
-  test_*.cpp                 # 单元测试
+cppagent/
+├── core/                          # LLM core library (STATIC)
+│   ├── message/                   # Chat message types (system/user/assistant/tool)
+│   ├── context/                   # Conversation context management
+│   └── provider/                  # LLM provider abstraction
+│       ├── llm_provider.ixx       # Provider interface
+│       ├── provider_registry.ixx  # Thread-safe provider factory registry
+│       └── openai_provider/       # OpenAI-compatible API implementation
+│
+├── mcp_client/                    # MCP client library (STATIC)
+│   ├── jsonrpc/                   # JSON-RPC 2.0 message types
+│   ├── transport/                 # Transport abstraction
+│   │   └── stdio_transport/       # Stdio subprocess transport (Windows/Linux)
+│   ├── mcp_client/                # Single MCP server client
+│   │   ├── initialize / list_tools / call_tool
+│   │   ├── list_resources / read_resource
+│   │   └── roots support (list + change notifications)
+│   └── mcp_manager/               # Multi-server orchestration
+│       ├── load(config)           # Load from mcpServers JSON
+│       ├── get_tools_schema()     # Aggregate tools with server prefix
+│       └── call_tool("server/tool", args)
+│
+├── app/                           # CLI executable
+└── tests/                         # Catch2 unit tests
 ```
 
-## 构建
+## Prerequisites
+
+- **CMake** 3.28+
+- **C++23** compiler (MSVC 19.40+ / GCC 13+ / Clang 17+)
+- **vcpkg** with `nlohmann-json` and `liboai` installed
+
+## Build
 
 ```bash
+# Windows (Visual Studio + vcpkg)
 cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=D:\vcpkg\scripts\buildsystems\vcpkg.cmake
+cmake --build build --config Release
+
+# Linux/WSL (vcpkg)
+cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
 cmake --build build --config Release
 ```
 
-## 测试
+## Run Tests
 
 ```bash
 cd build
 ctest -C Release
 ```
 
-## 使用
+## MCP Configuration
+
+Create a config file and load it into `mcp_manager`:
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/user/project"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx"
+      }
+    }
+  }
+}
+```
 
 ```cpp
-// 注册 provider
+#include <nlohmann/json.hpp>
+#include <mcp_manager.hpp>
+
+// Load config
+auto config = nlohmann::json::parse(std::ifstream("mcp_config.json"));
+
+mcp_manager manager;
+manager.load(config);
+
+// Get aggregated tools (prefixed as "server/tool")
+auto tools = manager.get_tools_schema();
+// [{"type":"function","function":{"name":"filesystem/read_file",...}},
+//  {"type":"function","function":{"name":"github/create_issue",...}}]
+
+// Model returns tool_calls with "filesystem/read_file"
+auto result = manager.call_tool("filesystem/read_file", {{"path", "/tmp/test.txt"}});
+```
+
+## LLM Provider Usage
+
+```cpp
+#include <provider_registry.hpp>
+#include <openai_provider.hpp>
+
+// Register
 provider_registry::instance().register_factory("openai", std::make_shared<openai_factory>());
 
-// 创建并使用
+// Create and configure
 auto provider = provider_registry::instance().create("openai");
-provider->set_config(config);
+provider->set_config(R"({"api_key":"sk-xxx","model":"gpt-4o"})"_json);
+
+// Generate
+auto ctx = context::from_messages({{"user", "Hello!"}});
 auto result = provider->generate(ctx);
-std::cout << result.message->get_content() << "\n";
+std::cout << result.content << "\n";
 ```
 
-## 设置 API Key
+## Environment Variables
 
 ```bash
-set CPPGENT_API_KEY=sk-xxxxx   # Windows
-export CPPGENT_API_KEY=sk-xxxxx # Linux/Mac
+# Windows
+set OPENAI_API_KEY=sk-xxxxx
+
+# Linux/Mac
+export OPENAI_API_KEY=sk-xxxxx
 ```
+
+## Key Design Decisions
+
+- **snake_case** for all identifiers (classes, functions, variables)
+- **PIMPL** pattern for all public classes
+- **Allman brace style** with 2-space indentation
+- **Unified initialization `{}`** throughout
+- **No move constructors** on PIMPL classes
+
+## License
+
+MIT

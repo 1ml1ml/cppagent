@@ -1,9 +1,12 @@
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 #include <thread>
 #include <variant>
 #include <stdexcept>
+
+#include <cstring>
 
 #include <windows.h>
 
@@ -19,6 +22,7 @@ class stdio_transport::impl
 {
 public:
 	static std::string quote_arg(const std::string& arg);
+	static std::string build_env_block(std::map<std::string, std::string> envs);
 	static std::string build_command_line(const std::string& cmd, const std::vector<std::string>& args);
 
 	static void create_pipe(HANDLE& read, HANDLE& write);
@@ -31,6 +35,7 @@ public:
 
 public:
 	std::string cmd_line{};
+	std::string env_block{};
 
 	HANDLE stdin_write{};
 	HANDLE stdout_read{};
@@ -49,6 +54,43 @@ std::string stdio_transport::impl::quote_arg(const std::string& arg)
 		return arg;
 	}
 	return "\"" + arg + "\"";
+}
+
+std::string stdio_transport::impl::build_env_block(std::map<std::string, std::string> envs)
+{
+	if (envs.empty())
+	{
+		return {};
+	}
+
+	if (auto parent_env{ GetEnvironmentStringsA() }; parent_env != nullptr)
+	{
+		for (auto index{ parent_env }; *index != '\0'; )
+		{
+			auto len{ std::strlen(index) };
+			std::string entry{ index, len };
+
+			auto pos{ entry.find('=') };
+			if (pos != std::string::npos && pos > 0)
+			{
+				if (auto name{ entry.substr(0, pos) }; !envs.contains(name))
+				{
+					envs[name] = entry.substr(pos + 1);
+				}
+			}
+			index += len + 1;
+		}
+		FreeEnvironmentStringsA(parent_env);
+	}
+
+	std::string block{};
+	for (const auto& [key, value] : envs)
+	{
+		block += key + "=" + value + '\0';
+	}
+	block += '\0';
+
+	return block;
 }
 
 std::string stdio_transport::impl::build_command_line(const std::string& cmd, const std::vector<std::string>& args)
@@ -142,9 +184,11 @@ void stdio_transport::impl::start_receive_thread()
 	} };
 }
 
-stdio_transport::stdio_transport(const std::string& command, const std::vector<std::string>& args) : transport(),
-impl{ std::make_unique<class impl>() }
+stdio_transport::stdio_transport(const std::string& command, const std::vector<std::string>& args, const std::map<std::string, std::string>& envs)
+  : transport(),
+    impl{ std::make_unique<class impl>() }
 {
+	impl->env_block = impl::build_env_block(envs);
 	impl->cmd_line = impl::build_command_line(command, args);
 }
 
@@ -183,7 +227,7 @@ void stdio_transport::open()
 	si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 	si.dwFlags = STARTF_USESTDHANDLES;
 
-	auto successful{ CreateProcessA(nullptr, impl->cmd_line.data(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &impl->proc_info) };
+	auto successful{ CreateProcessA(nullptr, impl->cmd_line.data(), nullptr, nullptr, TRUE, 0, impl->env_block.empty() ? nullptr : impl->env_block.data(), nullptr, &si, &impl->proc_info) };
 
 	CloseHandle(stdin_read);
 	CloseHandle(stdout_write);

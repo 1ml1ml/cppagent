@@ -41,11 +41,11 @@ public:
 	nlohmann::json to_json() const;
 
 public:
+	std::int64_t id{};
 	std::string jsonrpc{ "2.0" };
-	std::variant<std::int64_t, std::string> id{};
 
 	std::string method{};
-	nlohmann::json params{ nlohmann::json::object() };
+	nlohmann::json params{};
 };
 
 export struct jsonrpc_notification
@@ -60,7 +60,7 @@ public:
 	std::string jsonrpc{ "2.0" };
 
 	std::string method{};
-	nlohmann::json params{ nlohmann::json::object() };
+	nlohmann::json params{};
 };
 
 export struct jsonrpc_response
@@ -72,8 +72,8 @@ public:
 	nlohmann::json to_json() const;
 
 public:
+	std::int64_t id{};
 	std::string jsonrpc{ "2.0" };
-	std::variant<std::int64_t, std::string> id{};
 	std::expected<nlohmann::json, jsonrpc_error> payload{};
 };
 

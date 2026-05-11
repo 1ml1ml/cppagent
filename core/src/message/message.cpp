@@ -21,6 +21,7 @@ const char* message::role_to_string(role r) noexcept
 	case role::system: return "system";
 	case role::user: return "user";
 	case role::assistant: return "assistant";
+	case role::tool: return "tool";
 	default: return "unknown";
 	}
 }

@@ -20,9 +20,12 @@ public:
 	enum class role
 	{
 		unknown,
+
 		user,
 		system,
 		assistant,
+
+		tool,
 	};
 	static const char* role_to_string(role r) noexcept;
 

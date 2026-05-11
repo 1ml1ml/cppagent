@@ -12,6 +12,7 @@ export module llm_provider;
 
 import context;
 import message;
+import mcp_manager;
 
 export struct usage_info
 {
@@ -34,7 +35,7 @@ public:
   virtual ~model_response() = default;
 
 public:
-  virtual void apply_to_context(const context_shared_ptr& ctx) const = 0;
+  virtual void apply_to_context(const context_shared_ptr& ctx, const mcp_manager_shared_ptr& mcp) const = 0;
 
 public:
   std::string id{};
@@ -50,13 +51,13 @@ export class model_normal_response : public model_response
 {
 public:
   bool is_truncated() const;
-  void apply_to_context(const context_shared_ptr& ctx) const override;
+  void apply_to_context(const context_shared_ptr& ctx, const mcp_manager_shared_ptr& mcp) const override;
 };
 
 export class model_tool_call_response : public model_response
 {
 public:
-  void apply_to_context(const context_shared_ptr& ctx) const override;
+  void apply_to_context(const context_shared_ptr& ctx, const mcp_manager_shared_ptr& mcp) const override;
 
 public:
   std::vector<tool_call> tool_calls{};

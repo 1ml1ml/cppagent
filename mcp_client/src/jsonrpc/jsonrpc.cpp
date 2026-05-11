@@ -9,31 +9,12 @@ module;
 
 module jsonrpc;
 
-nlohmann::json jsonrpc_id_to_json(const std::variant<std::int64_t, std::string>& id)
-{
-	return std::visit([](const auto& v) -> nlohmann::json { return v; }, id);
-}
-
-std::variant<std::int64_t, std::string> jsonrpc_id_from_json(const nlohmann::json& j)
-{
-	std::variant<std::int64_t, std::string> id{};
-	if (j.is_number_integer())
-	{
-		id = j.get<std::int64_t>();
-	}
-	else if (j.is_string())
-	{
-		id = j.get<std::string>();
-	}
-	return id;
-}
-
 jsonrpc_error jsonrpc_error::from_json(const nlohmann::json& j)
 {
 	jsonrpc_error e{};
 	e.code = j["code"];
 	e.message = j["message"];
-	e.data = j["data"];
+	e.data = j.value("data", nlohmann::json{});
 	return e;
 }
 
@@ -42,7 +23,12 @@ nlohmann::json jsonrpc_error::to_json() const
 	nlohmann::json j{};
 	j["code"] = code;
 	j["message"] = message;
-	j["data"] = data;
+
+	if (!data.is_null())
+	{
+		j["data"] = data;
+	}
+
 	return j;
 }
 
@@ -50,21 +36,26 @@ jsonrpc_request jsonrpc_request::from_json(const nlohmann::json& j)
 {
 	jsonrpc_request req{};
 	req.jsonrpc = j["jsonrpc"];
-	req.id = jsonrpc_id_from_json(j["id"]);
+	req.id = j["id"].get<std::int64_t>();
 
 	req.method = j["method"];
-	req.params = j["params"];
+	req.params = j.value("params", nlohmann::json{});
 	return req;
 }
 
 nlohmann::json jsonrpc_request::to_json() const
 {
 	nlohmann::json j{};
+	j["id"] = id;
 	j["jsonrpc"] = jsonrpc;
-	j["id"] = jsonrpc_id_to_json(id);
 
 	j["method"] = method;
-	j["params"] = params;
+
+	if (!params.is_null())
+	{
+		j["params"] = params;
+	}
+
 	return j;
 }
 
@@ -73,7 +64,7 @@ jsonrpc_notification jsonrpc_notification::from_json(const nlohmann::json& j)
 	jsonrpc_notification n{};
 	n.jsonrpc = j["jsonrpc"];
 	n.method = j["method"];
-	n.params = j["params"];
+	n.params = j.value("params", nlohmann::json{});
 	return n;
 }
 
@@ -82,7 +73,12 @@ nlohmann::json jsonrpc_notification::to_json() const
 	nlohmann::json j{};
 	j["jsonrpc"] = jsonrpc;
 	j["method"] = method;
-	j["params"] = params;
+
+	if (!params.is_null())
+	{
+		j["params"] = params;
+	}
+
 	return j;
 }
 
@@ -90,11 +86,11 @@ jsonrpc_response jsonrpc_response::from_json(const nlohmann::json& j)
 {
 	jsonrpc_response res{};
 	res.jsonrpc = j["jsonrpc"];
-	res.id = jsonrpc_id_from_json(j["id"]);
+	res.id = j["id"].get<std::int64_t>();
 
 	if (j.contains("error"))
 	{
-		res.payload = std::unexpected(jsonrpc_error::from_json(j["error"]));
+		res.payload = std::unexpected{ jsonrpc_error::from_json(j["error"]) };
 	}
 	else if (j.contains("result"))
 	{
@@ -102,7 +98,7 @@ jsonrpc_response jsonrpc_response::from_json(const nlohmann::json& j)
 	}
 	else
 	{
-		res.payload = std::unexpected(jsonrpc_error{ static_cast<std::int32_t>(error_code::INVALID_REQUEST), "Response must contain either 'result' or 'error'" });
+		throw std::runtime_error{ "Response must contain either 'result' or 'error'" };
 	}
 
 	return res;
@@ -111,11 +107,16 @@ jsonrpc_response jsonrpc_response::from_json(const nlohmann::json& j)
 nlohmann::json jsonrpc_response::to_json() const
 {
 	nlohmann::json j{};
+	j["id"] = id;
 	j["jsonrpc"] = jsonrpc;
-	j["id"] = jsonrpc_id_to_json(id);
 
 	if (payload)
 	{
+		if (payload->is_null())
+		{
+			throw std::runtime_error{ "Response must contain either 'result' or 'error'" };
+		}
+
 		j["result"] = payload.value();
 	}
 	else

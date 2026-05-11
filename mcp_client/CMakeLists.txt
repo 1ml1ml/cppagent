@@ -14,10 +14,12 @@ target_sources(mcp_client
 		"src/transport/transport.ixx"
 		"src/transport/stdio_transport/stdio_transport.ixx"
 		"src/mcp_client/mcp_client.ixx"
+		"src/mcp_manager/mcp_manager.ixx"
 	PRIVATE
 		"src/jsonrpc/jsonrpc.cpp"
 		"src/transport/stdio_transport/stdio_transport.cpp"
 		"src/mcp_client/mcp_client.cpp"
+		"src/mcp_manager/mcp_manager.cpp"
 )
 
 target_link_libraries(mcp_client

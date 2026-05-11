@@ -15,14 +15,14 @@ import stdio_transport;
 TEST_CASE("mcp_client: initialize with real filesystem server", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", std::vector<std::string>{"/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "D:/Sources/cppagent/tests"}) };
-  REQUIRE_NOTHROW(client.initialize(nlohmann::json::object(), std::chrono::seconds{ 30 }));
-  REQUIRE_THROWS_AS(client.initialize(nlohmann::json::object(), std::chrono::seconds{ 1 }), std::runtime_error);
+  REQUIRE_NOTHROW(client.initialize(std::chrono::seconds{ 30 }));
+  REQUIRE_THROWS_AS(client.initialize(std::chrono::seconds{ 1 }), std::runtime_error);
 }
 
 TEST_CASE("mcp_client: list_tools with real filesystem server", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", std::vector<std::string>{"/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "D:/Sources/cppagent/tests"}) };
-  client.initialize(nlohmann::json::object(), std::chrono::seconds{ 30 });
+  client.initialize(std::chrono::seconds{ 30 });
 
   auto tools{ client.list_tools(std::chrono::seconds{ 5 }) };
   REQUIRE(!tools.empty());
@@ -38,7 +38,7 @@ TEST_CASE("mcp_client: list_tools with real filesystem server", "[mcp_client][in
 TEST_CASE("mcp_client: call_tool with real filesystem server", "[mcp_client][integration]")
 {
   mcp_client client{ std::make_unique<stdio_transport>("cmd", std::vector<std::string>{"/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "D:/Sources/cppagent/tests"}) };
-  client.initialize(nlohmann::json::object(), std::chrono::seconds{ 30 });
+  client.initialize(std::chrono::seconds{ 30 });
 
   auto tools{ client.list_tools(std::chrono::seconds{ 5 }) };
   REQUIRE(!tools.empty());
