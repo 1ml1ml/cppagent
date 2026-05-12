@@ -13,17 +13,28 @@ export module mcp_client;
 
 import transport;
 
-export struct tool_info
-{
-  std::string name{};
-  std::string description{};
-  nlohmann::json input_schema{};
-};
+class mcp_client;
+export using mcp_client_shared_ptr = std::shared_ptr<mcp_client>;
 
 export struct tool_result
 {
   bool is_error{};
   nlohmann::json content{};
+};
+
+export struct tool_info
+{
+public:
+  tool_result exec(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 }) const;
+
+public:
+  std::string name{};
+  std::string description{};
+  nlohmann::json input_schema{};
+
+private:
+  friend class mcp_client;
+  mcp_client_shared_ptr client{};
 };
 
 export struct resource_info
@@ -45,9 +56,6 @@ export struct resource_content
 
 export using request_handler = std::function<nlohmann::json(const nlohmann::json& params)>;
 export using notification_handler = std::function<void(const nlohmann::json& params)>;
-
-class mcp_client;
-export using mcp_client_shared_ptr = std::shared_ptr<mcp_client>;
 
 export class mcp_client : public std::enable_shared_from_this<mcp_client>
 {

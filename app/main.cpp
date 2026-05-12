@@ -9,45 +9,40 @@
 
 import context;
 import message;
+import mcp_client;
+import mcp_manager;
 import llm_provider;
 import openai_provider;
 import provider_registry;
-import mcp_manager;
-import mcp_client;
 
 std::string load_api_key(const std::string& path)
 {
-  std::ifstream file{ path };
-  if (!file.is_open())
-  {
-    return {};
-  }
-
   std::string key{};
-  std::getline(file, key);
+  if (std::ifstream file{ path }; file.is_open())
+  {
+    std::getline(file, key);
+  }
   return key;
 }
 
 nlohmann::json load_mcp_config()
 {
-  std::ifstream file{ R"(D:\Sources\cppagent\mcp_config.json)" };
-  if (!file.is_open())
+	nlohmann::json config{};
+  if (std::ifstream file{ R"(D:\Sources\cppagent\mcp_config.json)" }; file.is_open())
   {
-    return {};
+    file >> config;
   }
-
-  nlohmann::json config{};
-  file >> config;
-  return config;
+	return config;
 }
 
 int main()
 {
+  SetConsoleCP(CP_UTF8);
   SetConsoleOutputCP(CP_UTF8);
 
   nlohmann::json config{};
   config["model"] = "moonshot-v1-8k";
-  config["base_url"] = "https://api.moonshot.cn/v1";
+  config["base_url"] = "https://api.moonshot.cn";
   config["api_key"] = load_api_key(R"(D:\Sources\cppagent\api_key.txt)");
 
   provider_registry::instance().register_factory( "openai", std::make_shared<openai_provider_factory>() );
@@ -59,31 +54,22 @@ int main()
 
   auto ctx{ std::make_shared<context>() };
   ctx->set_instructions("you are a helpful assistant");
-  ctx->append(std::make_shared<message>(message::role::user, "你好"));
 
-  try
+  while (true)
   {
-    for (int i{ 0 }; i < 10; ++i)
+    std::string promat{};
+    std::getline(std::cin, promat);
+
+    ctx->append(std::make_shared<message>(message::role::user, message::type::text, promat));
+    
+    model_response_shared_ptr resp{};
+    do
     {
-      auto result{ provider->generate(ctx, mcp->get_tools(), [](std::string) { return true; }) };
+      resp = provider->generate(ctx, mcp->get_tools());
+    } while (!(resp->finish_reason == "stop" || resp->finish_reason == "length"));
 
-      if (result->finish_reason == "tool_call")
-      {
-        result->apply_to_context(ctx, mcp);
-      }
-      else
-      {
-        result->apply_to_context(ctx, mcp);
-        break;
-      }
-    }
-
-    std::cout << *ctx << std::endl;
-  }
-  catch (const std::exception& e)
-  {
-    std::cerr << "Error: " << e.what() << "\n";
-    return 1;
+    std::cout.clear();
+    std::cout << *ctx->messages_ref().back() << std::endl;
   }
 
   return 0;

@@ -15,6 +15,11 @@ module mcp_client;
 
 import jsonrpc;
 
+tool_result tool_info::exec(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout) const
+{
+	return client->call_tool(name, arguments, timeout);
+}
+
 class mcp_client::impl
 {
 public:
@@ -159,6 +164,7 @@ std::vector<tool_info> mcp_client::list_tools(const std::chrono::milliseconds& t
 	for (const auto& tool_json : resp.payload.value()["tools"])
 	{
 		tool_info tool{};
+		tool.client = shared_from_this();
 		tool.name = tool_json["name"].get<std::string>();
 		tool.description = tool_json["description"].get<std::string>();
 		tool.input_schema = tool_json["inputSchema"];

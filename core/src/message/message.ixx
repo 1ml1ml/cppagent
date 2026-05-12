@@ -19,13 +19,17 @@ export class message : public std::enable_shared_from_this<message>
 public:
 	enum class role
 	{
-		unknown,
-
 		user,
-		tool,
 		assistant,
 	};
 	static const char* role_to_string(role r) noexcept;
+
+	enum class type
+	{
+		text,
+		tool_call,
+		tool_result,
+	};
 
 	struct attachment
 	{
@@ -40,12 +44,13 @@ public:
 
 public:
 	message();
-	message(const role& r, const std::string_view& content, const std::vector<attachment>& attachments = {});
+	message(const role& r, const type& t, const std::string_view& content, const std::vector<attachment>& attachments = {});
 
 	~message();
 
 public:
 	role get_role() const;
+	type get_type() const;
 	std::string_view get_content() const;
 	std::vector<attachment>& attachments_ref() const;
 

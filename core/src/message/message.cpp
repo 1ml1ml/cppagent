@@ -19,10 +19,9 @@ const char* message::role_to_string(role r) noexcept
 	switch (r)
 	{
 	case role::user: return "user";
-	case role::tool: return "tool";
 	case role::assistant: return "assistant";
-	default: return "unknown";
 	}
+	throw std::runtime_error{ "unknow role" };
 }
 
 std::optional<message::attachment> message::attachment::from_file(const std::filesystem::path& path)
@@ -54,7 +53,8 @@ std::optional<message::attachment> message::attachment::from_file(const std::fil
 class message::impl
 {
 public:
-	role role{ role::unknown };
+	role role{ role::user };
+	type type{ type::text };
 
 	std::string content{};
 	std::vector<attachment> attachments{};
@@ -65,9 +65,10 @@ message::message() :
 {
 }
 
-message::message(const role& r, const std::string_view& content, const std::vector<attachment>& attachments) : message()
+message::message(const role& r, const type& t, const std::string_view& content, const std::vector<attachment>& attachments) : message()
 {
 	impl->role = r;
+	impl->type = t;
 	impl->content = content;
 	impl->attachments = attachments;
 }
@@ -77,6 +78,11 @@ message::~message() = default;
 message::role message::get_role() const
 {
 	return impl->role;
+}
+
+message::type message::get_type() const
+{
+	return impl->type;
 }
 
 std::string_view message::get_content() const

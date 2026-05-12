@@ -227,12 +227,12 @@ void stdio_transport::open()
 	si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 	si.dwFlags = STARTF_USESTDHANDLES;
 
-	auto successful{ CreateProcessA(nullptr, impl->cmd_line.data(), nullptr, nullptr, TRUE, 0, impl->env_block.empty() ? nullptr : impl->env_block.data(), nullptr, &si, &impl->proc_info) };
+	auto success{ CreateProcessA(nullptr, impl->cmd_line.data(), nullptr, nullptr, TRUE, 0, impl->env_block.empty() ? nullptr : impl->env_block.data(), nullptr, &si, &impl->proc_info) };
 
 	CloseHandle(stdin_read);
 	CloseHandle(stdout_write);
 
-	if (!successful)
+	if (!success)
 	{
 		CloseHandle(impl->stdin_write);
 		CloseHandle(impl->stdout_read);

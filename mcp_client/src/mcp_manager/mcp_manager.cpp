@@ -43,29 +43,8 @@ std::vector<tool_info> mcp_manager::get_tools(const std::chrono::milliseconds& t
 	{
 		for (auto tool : client->list_tools(timeout))
 		{
-			tool.name = server_name + "/" + tool.name;
 			tools.push_back(tool);
 		}
 	}
 	return tools;
-}
-
-tool_result mcp_manager::call_tool(const std::string& prefixed_name, const nlohmann::json& arguments) const
-{
-	auto pos{ prefixed_name.find('/') };
-	if (pos == std::string::npos)
-	{
-		throw std::runtime_error{ "Invalid tool name format, expected 'server/tool': " + prefixed_name };
-	}
-
-	auto server_name{ prefixed_name.substr(0, pos) };
-	auto tool_name{ prefixed_name.substr(pos + 1) };
-
-	auto it{ impl->clients.find(server_name) };
-	if (it == impl->clients.end())
-	{
-		throw std::runtime_error{ "Unknown MCP server: " + server_name };
-	}
-
-	return it->second->call_tool(tool_name, arguments);
 }

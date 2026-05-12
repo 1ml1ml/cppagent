@@ -42,7 +42,7 @@ void context::append(const std::vector<message_shared_ptr>& msgs)
   impl->msgs.insert(impl->msgs.end(), msgs.cbegin(), msgs.cend());
 }
 
-std::vector<message_shared_ptr> context::messages() const
+const std::vector<message_shared_ptr>& context::messages_ref() const
 {
   return impl->msgs;
 }
@@ -65,7 +65,7 @@ std::ostream& operator<<(std::ostream& os, const context& ctx)
   }
 
   os << "--- Context (" << ctx.size() << " messages) ---\n";
-  for (const auto& msg : ctx.messages())
+  for (const auto& msg : ctx.messages_ref())
   {
     if (msg)
     {

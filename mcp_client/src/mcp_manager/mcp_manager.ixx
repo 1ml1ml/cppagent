@@ -25,7 +25,6 @@ public:
   void load(const nlohmann::json& config);
 
   std::vector<tool_info> get_tools(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 }) const;
-  tool_result call_tool(const std::string& prefixed_name, const nlohmann::json& arguments) const;
 
 private:
   class impl;
