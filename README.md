@@ -14,8 +14,8 @@ C++23 LLM Agent Framework with MCP (Model Context Protocol) support.
   - Multi-server management with `mcp_manager`
   - Tool discovery and invocation with server namespacing (`server/tool`)
   - Resource listing and reading
-- **Cross-Platform** — Windows (MSVC) + Linux (WSL/GCC)
-- **CMake 3.28+** with vcpkg integration
+- **CMake 3.28+**
+- **Windows-focused** — `app` uses Windows console APIs; core libraries compile on Linux/WSL
 
 ## Architecture
 
@@ -54,18 +54,13 @@ cppagent/
 
 - **CMake** 3.28+
 - **C++23** compiler (MSVC 19.40+ / GCC 13+)
-- **vcpkg** with `nlohmann-json`
-- **OpenSSL** development headers (for ai-sdk-cpp HTTPS)
+- **OpenSSL** development headers
+- **npx** (for MCP servers, optional)
 
 ## Build
 
 ```bash
-# Windows (Visual Studio + vcpkg)
-cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=D:\vcpkg\scripts\buildsystems\vcpkg.cmake
-cmake --build build --config Release
-
-# Linux/WSL (vcpkg)
-cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake -B build -S .
 cmake --build build --config Release
 ```
 
@@ -171,10 +166,11 @@ std::cout << resp->message->get_content() << "\n";
 - **Message type enum** (`text`/`tool_call`/`tool_result`) separates content semantics from role
 - **ai-sdk-cpp** handles HTTP, JSON schema, retry, streaming, and multi-step tool loops
 
-## Known Issues
+## Known Issues / Limitations
 
 - **Tests disabled:** Catch2 v3 + MSVC C++20 Modules = fatal compiler errors (C2572/C7571). Waiting for upstream fix or test framework replacement.
-- **Windows console UTF-8:** `SetConsoleCP(CP_UTF8)` is set in `main()`, but legacy terminals may still need `chcp 65001`.
+- **Windows-only app:** `main.cpp` uses `SetConsoleCP` / `SetConsoleOutputCP` (Windows API) for UTF-8 console I/O. Linux/WSL build requires replacing these calls.
+- **No vcpkg:** All third-party dependencies are embedded under `external/` (ai-sdk-cpp bundles its own nlohmann_json, cpp-httplib, etc.).
 
 ## License
 
