@@ -5,18 +5,18 @@ module;
 
 #include "nlohmann/json.hpp"
 
-export module openai_provider;
+export module openai_responses_provider;
 
 import llm_provider;
 
 import context;
 import mcp_client;
 
-export class openai_provider : public llm_provider
+export class openai_responses_provider : public llm_provider
 {
 public:
-  openai_provider();
-  ~openai_provider();
+  openai_responses_provider();
+  ~openai_responses_provider();
 
 public:
   nlohmann::json get_config() const override;
@@ -30,7 +30,7 @@ private:
   std::unique_ptr<impl> impl{};
 };
 
-export class openai_provider_factory : public llm_provider_factory
+export class openai_responses_provider_factory : public llm_provider_factory
 {
 public:
   std::string_view name() const override;

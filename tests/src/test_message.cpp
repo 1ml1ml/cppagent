@@ -10,7 +10,7 @@ TEST_CASE("message 默认构造", "[message]")
   auto msg{ std::make_shared<message>() };
   REQUIRE(msg->get_role() == message::role::unknown);
   REQUIRE(msg->get_content().empty());
-  REQUIRE(msg->attachments().empty());
+  REQUIRE(msg->attachments_ref().empty());
 }
 
 TEST_CASE("message 带参数构造", "[message]")
@@ -63,11 +63,11 @@ TEST_CASE("message attachment 操作", "[message]")
   att.data = { std::byte{'a'}, std::byte{'b'} };
 
   msg->attach(att);
-  REQUIRE(msg->attachments().size() == 1);
-  REQUIRE(msg->attachments()[0].name == "test.txt");
+  REQUIRE(msg->attachments_ref().size() == 1);
+  REQUIRE(msg->attachments_ref()[0].name == "test.txt");
 
   msg->clear_attachments();
-  REQUIRE(msg->attachments().empty());
+  REQUIRE(msg->attachments_ref().empty());
 }
 
 TEST_CASE("message attachment 批量添加", "[message]")
@@ -83,6 +83,6 @@ TEST_CASE("message attachment 批量添加", "[message]")
   att2.mime_type = "image/png";
 
   msg->attach(std::vector{ att1, att2 });
-  REQUIRE(msg->attachments().size() == 2);
-  REQUIRE(msg->attachments()[1].name == "b.png");
+  REQUIRE(msg->attachments_ref().size() == 2);
+  REQUIRE(msg->attachments_ref()[1].name == "b.png");
 }

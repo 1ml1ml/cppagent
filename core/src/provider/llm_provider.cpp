@@ -32,7 +32,12 @@ void model_tool_call_response::apply_to_context(const context_shared_ptr& ctx, c
 	for (const auto& tool_call : tool_calls)
 	{
 		auto result{ mcp->call_tool(tool_call.function_name, tool_call.arguments) };
-		result["tool_call_id"] = tool_call.id;
-		ctx->append(std::make_shared<class message>(message::role::tool, result));
+
+		auto result_json{ nlohmann::json::object()};
+		result_json["tool_call_id"] = tool_call.id;
+		result_json["content"] = result.content;
+		result_json["is_error"] = result.is_error;
+
+		ctx->append(std::make_shared<class message>(message::role::tool, result_json.dump()));
 	}
 }

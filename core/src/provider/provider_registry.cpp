@@ -19,8 +19,8 @@ provider_registry& provider_registry::instance()
 class provider_registry::impl
 {
 public:
-  std::map<std::string, provider_factory_shared_ptr> factories{};
   mutable std::shared_mutex mutex{};
+  std::map<std::string, provider_factory_shared_ptr> factories{};
 };
 
 provider_registry::provider_registry()
@@ -70,7 +70,7 @@ std::vector<std::string> provider_registry::provider_names() const
 bool provider_registry::has_provider(const std::string& provider_name) const
 {
   std::shared_lock lock(impl->mutex);
-  return impl->factories.find(provider_name) != impl->factories.end();
+  return impl->factories.contains(provider_name);
 }
 
 void provider_registry::clear()

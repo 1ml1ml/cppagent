@@ -11,6 +11,7 @@ import message;
 class context::impl
 {
 public:
+  std::string instructions{};
   std::vector<message_shared_ptr> msgs{};
 };
 
@@ -21,9 +22,14 @@ context::context()
 
 context::~context() = default;
 
-void context::merge(const context_shared_ptr& ctx)
+std::string_view context::get_instructions() const
 {
-  append(ctx->messages_ref());
+  return impl->instructions;
+}
+
+void context::set_instructions(const std::string_view& instructions)
+{
+  impl->instructions = instructions;
 }
 
 void context::append(const message_shared_ptr& msg)
@@ -37,11 +43,6 @@ void context::append(const std::vector<message_shared_ptr>& msgs)
 }
 
 std::vector<message_shared_ptr> context::messages() const
-{
-  return impl->msgs;
-}
-
-const std::vector<message_shared_ptr>& context::messages_ref() const
 {
   return impl->msgs;
 }
@@ -64,7 +65,7 @@ std::ostream& operator<<(std::ostream& os, const context& ctx)
   }
 
   os << "--- Context (" << ctx.size() << " messages) ---\n";
-  for (const auto& msg : ctx.messages_ref())
+  for (const auto& msg : ctx.messages())
   {
     if (msg)
     {

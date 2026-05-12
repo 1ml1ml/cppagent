@@ -22,10 +22,8 @@ public:
 		unknown,
 
 		user,
-		system,
-		assistant,
-
 		tool,
+		assistant,
 	};
 	static const char* role_to_string(role r) noexcept;
 
@@ -47,18 +45,9 @@ public:
 	~message();
 
 public:
-	void set_role(const role& r);
-	void set_content(const std::string_view& content);
-
 	role get_role() const;
 	std::string_view get_content() const;
-
-	void attach(const attachment& att);
-	void attach(const std::vector<attachment>& attachments);
-
-	const std::vector<attachment>& attachments() const;
-
-	void clear_attachments();
+	std::vector<attachment>& attachments_ref() const;
 
 private:
 	class impl;

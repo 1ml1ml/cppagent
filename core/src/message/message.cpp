@@ -18,10 +18,9 @@ const char* message::role_to_string(role r) noexcept
 {
 	switch (r)
 	{
-	case role::system: return "system";
 	case role::user: return "user";
-	case role::assistant: return "assistant";
 	case role::tool: return "tool";
+	case role::assistant: return "assistant";
 	default: return "unknown";
 	}
 }
@@ -68,23 +67,12 @@ message::message() :
 
 message::message(const role& r, const std::string_view& content, const std::vector<attachment>& attachments) : message()
 {
-	set_role(r);
-	set_content(content);
-
-	attach(attachments);
+	impl->role = r;
+	impl->content = content;
+	impl->attachments = attachments;
 }
 
 message::~message() = default;
-
-void message::set_role(const role& r)
-{
-	impl->role = r;
-}
-
-void message::set_content(const std::string_view& content)
-{
-	impl->content = content;
-}
 
 message::role message::get_role() const
 {
@@ -96,24 +84,9 @@ std::string_view message::get_content() const
 	return impl->content;
 }
 
-void message::attach(const attachment& att)
-{
-	impl->attachments.push_back(att);
-}
-
-void message::attach(const std::vector<attachment>& attachments)
-{
-	impl->attachments.insert(impl->attachments.end(), attachments.begin(), attachments.end());
-}
-
-const std::vector<message::attachment>& message::attachments() const
+std::vector<message::attachment>& message::attachments_ref() const
 {
 	return impl->attachments;
-}
-
-void message::clear_attachments()
-{
-	impl->attachments.clear();
 }
 
 std::ostream& operator<<(std::ostream& os, message::role r)
@@ -134,9 +107,9 @@ std::ostream& operator<<(std::ostream& os, const message& msg)
 		os << "(empty)";
 	}
 
-	if (auto atts = msg.attachments(); !atts.empty())
+	if (auto atts = msg.attachments_ref(); !atts.empty())
 	{
-		os << " [attachments: " << atts.size() << "]";
+		os << " [attachments_ref: " << atts.size() << "]";
 	}
 
 	return os;

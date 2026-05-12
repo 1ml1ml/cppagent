@@ -12,6 +12,7 @@ export module llm_provider;
 
 import context;
 import message;
+import mcp_client;
 import mcp_manager;
 
 export struct usage_info
@@ -77,8 +78,8 @@ public:
   virtual nlohmann::json get_config() const = 0;
   virtual void set_config(const nlohmann::json& config) = 0;
 
-  virtual model_response_shared_ptr generate( const context_shared_ptr& ctx, const stream_callback& callback = {}) = 0;
-  virtual std::future<model_response_shared_ptr> generate_async( const context_shared_ptr& ctx, const stream_callback& callback = {}) = 0;
+  virtual model_response_shared_ptr generate( const context_shared_ptr& ctx, const std::vector<tool_info>& tools = {}, const stream_callback& callback = {}) = 0;
+  virtual std::future<model_response_shared_ptr> generate_async( const context_shared_ptr& ctx, const std::vector<tool_info>& tools = {}, const stream_callback& callback = {}) = 0;
 };
 
 class llm_provider_factory;

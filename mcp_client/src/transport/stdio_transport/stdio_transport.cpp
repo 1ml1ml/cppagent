@@ -7,8 +7,6 @@
 #include <cstring>
 #include <stdexcept>
 
-#include <iostream>
-
 #include <windows.h>
 
 #include "nlohmann/json.hpp"
@@ -43,7 +41,6 @@ public:
 	PROCESS_INFORMATION proc_info{};
 
 	bool connected{ false };
-	std::string read_buffer{};
 	std::thread read_thread{};
 	transport::receive_callback callback{};
 };
@@ -155,26 +152,27 @@ void stdio_transport::impl::start_receive_thread()
 
 	read_thread = std::thread{ [this]
 	{
+		std::string cache{};
+
 		while (connected)
 		{
 			DWORD read{};
 			char buf[4096]{};
-			std::cout << "Waiting for output..." << std::endl;
+
 			if (ReadFile(stdout_read, buf, sizeof(buf), &read, nullptr) || read == 0)
 			{
-				std::cout << "Read " << read << " bytes" << std::endl;
-				read_buffer.append(buf, read);
+				cache.append(buf, read);
 
 				while (connected)
 				{
-					auto pos{ read_buffer.find('\n') };
+					auto pos{ cache.find('\n') };
 					if (pos == std::string::npos)
 					{
 						break;
 					}
 
-					auto line{ read_buffer.substr(0, pos) };
-					read_buffer.erase(0, pos + 1);
+					auto line{ cache.substr(0, pos) };
+					cache.erase(0, pos + 1);
 
 					if (callback && line.size())
 					{
@@ -256,10 +254,10 @@ void stdio_transport::send(const jsonrpc_message& msg)
 		throw std::runtime_error{ "Transport not connected" };
 	}
 
-	auto payload{ std::visit([](const auto& jsonrpc) -> nlohmann::json { return jsonrpc.to_json(); }, msg).dump() + "\n" };
-	if (DWORD written{}; !WriteFile(impl->stdin_write, payload.data(), static_cast<DWORD>(payload.size()), &written, nullptr))
+	auto data{ std::visit([](const auto& jsonrpc) -> nlohmann::json { return jsonrpc.to_json(); }, msg).dump() + "\n" };
+	if (DWORD written{}; !WriteFile(impl->stdin_write, data.data(), static_cast<DWORD>(data.size()), &written, nullptr))
 	{
-		throw std::runtime_error{ "Failed to write to process stdin: " + payload };
+		throw std::runtime_error{ "Failed to write to process stdin: " + data };
 	}
 }
 
@@ -274,8 +272,6 @@ void stdio_transport::close()
 	{
 		return;
 	}
-
-	std::cout << "close in" << std::endl;
 
 	impl->connected = false;
 
@@ -311,6 +307,4 @@ void stdio_transport::close()
 		CloseHandle(impl->proc_info.hThread);
 		impl->proc_info.hThread = nullptr;
 	}
-
-	std::cout << "close out" << std::endl;
 }

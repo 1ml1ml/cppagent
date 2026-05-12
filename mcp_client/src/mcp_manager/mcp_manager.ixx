@@ -4,6 +4,7 @@ module;
 #include <memory>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "nlohmann/json.hpp"
 
@@ -23,8 +24,8 @@ public:
 public:
   void load(const nlohmann::json& config);
 
-  nlohmann::json get_tools_schema() const;
-  nlohmann::json call_tool(const std::string& prefixed_name, const nlohmann::json& arguments) const;
+  std::vector<tool_info> get_tools(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 }) const;
+  tool_result call_tool(const std::string& prefixed_name, const nlohmann::json& arguments) const;
 
 private:
   class impl;

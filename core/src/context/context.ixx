@@ -18,13 +18,13 @@ public:
   ~context();
 
 public:
-  void merge(const context_shared_ptr& ctx);
-
+  std::string_view get_instructions() const;
+  void set_instructions(const std::string_view& instructions);
+  
   void append(const message_shared_ptr& msg);
   void append(const std::vector<message_shared_ptr>& msgs);
 
   std::vector<message_shared_ptr> messages() const;
-  const std::vector<message_shared_ptr>& messages_ref() const;
 
   size_t size() const;
   void clear();

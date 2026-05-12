@@ -78,13 +78,6 @@ mcp_client::mcp_client(transport_unique_ptr&& transport)
 					if constexpr (std::derived_from<T, jsonrpc_response>)
 					{
 						impl->handle_response(jsonrpc);
-
-					}
-					else if constexpr (std::derived_from<T, jsonrpc_request>)
-					{
-					}
-					else if constexpr (std::derived_from<T, jsonrpc_notification>)
-					{
 					}
 				}, msg);
 		});
@@ -132,10 +125,10 @@ void mcp_client::initialize(const std::chrono::milliseconds& timeout)
 	req.params["clientInfo"]["version"] = impl->version;
 	req.params["capabilities"]["roots"]["listChanged"] = false;
 
-	auto response{ impl->send(req, timeout) };
-	if (!response.payload.has_value())
+	auto resp{ impl->send(req, timeout) };
+	if (!resp.payload.has_value())
 	{
-		throw std::runtime_error{ "Initialization failed: " + response.payload.error().message };
+		throw std::runtime_error{ "Initialization failed: " + resp.payload.error().message };
 	}
 
 	jsonrpc_notification notify{};
@@ -156,20 +149,20 @@ std::vector<tool_info> mcp_client::list_tools(const std::chrono::milliseconds& t
 	req.id = impl->next_request_id.fetch_add(1, std::memory_order_relaxed);
 	req.method = "tools/list";
 
-	auto response{ impl->send(req, timeout) };
-	if (!response.payload.has_value())
+	auto resp{ impl->send(req, timeout) };
+	if (!resp.payload.has_value())
 	{
-		throw std::runtime_error{ "list_tools failed: " + response.payload.error().message };
+		throw std::runtime_error{ "list_tools failed: " + resp.payload.error().message };
 	}
 
 	std::vector<tool_info> tools{};
-	for (const auto& tool : response.payload.value()["tools"])
+	for (const auto& tool_json : resp.payload.value()["tools"])
 	{
-		tool_info info{};
-		info.name = tool["name"].get<std::string>();
-		info.description = tool["description"].get<std::string>();
-		info.input_schema = tool["inputSchema"];
-		tools.push_back(std::move(info));
+		tool_info tool{};
+		tool.name = tool_json["name"].get<std::string>();
+		tool.description = tool_json["description"].get<std::string>();
+		tool.input_schema = tool_json["inputSchema"];
+		tools.push_back(std::move(tool));
 	}
 
 	return tools;
@@ -188,17 +181,17 @@ tool_result mcp_client::call_tool(const std::string_view& name, const nlohmann::
 	req.params["name"] = name;
 	req.params["arguments"] = arguments;
 
-	auto response{ impl->send(req, timeout) };
-	if (!response.payload.has_value())
+	auto resp{ impl->send(req, timeout) };
+	if (!resp.payload.has_value())
 	{
-		throw std::runtime_error{ "call_tool failed: " + response.payload.error().message };
+		throw std::runtime_error{ "call_tool failed: " + resp.payload.error().message };
 	}
 
-	auto json{ response.payload.value() };
+	auto resp_json{ resp.payload.value() };
 
 	tool_result tr{};
-	tr.is_error = json.value("isError", false);
-	tr.content = json["content"];
+	tr.is_error = resp_json.value("isError", false);
+	tr.content = resp_json["content"];
 	return tr;
 }
 
@@ -213,30 +206,30 @@ std::vector<resource_info> mcp_client::list_resources(const std::chrono::millise
 	req.id = impl->next_request_id.fetch_add(1, std::memory_order_relaxed);
 	req.method = "resources/list";
 
-	auto response{ impl->send(req, timeout) };
-	if (!response.payload.has_value())
+	auto resp{ impl->send(req, timeout) };
+	if (!resp.payload.has_value())
 	{
-		throw std::runtime_error{ "list_resources failed: " + response.payload.error().message };
+		throw std::runtime_error{ "list_resources failed: " + resp.payload.error().message };
 	}
 
 	std::vector<resource_info> resources{};
-	for (const auto& item : response.payload.value()["resources"])
+	for (const auto& resource_json : resp.payload.value()["resources"])
 	{
-		resource_info info{};
-		info.uri = item["uri"].get<std::string>();
-		info.name = item["name"].get<std::string>();
+		resource_info resource{};
+		resource.uri = resource_json["uri"].get<std::string>();
+		resource.name = resource_json["name"].get<std::string>();
 
-		if (item.contains("mimeType"))
+		if (resource_json.contains("mimeType"))
 		{
-			info.mime_type = item["mimeType"].get<std::string>();
+			resource.mime_type = resource_json["mimeType"].get<std::string>();
 		}
 
-		if (item.contains("description"))
+		if (resource_json.contains("description"))
 		{
-			info.description = item["description"].get<std::string>();
+			resource.description = resource_json["description"].get<std::string>();
 		}
 
-		resources.push_back(std::move(info));
+		resources.push_back(std::move(resource));
 	}
 
 	return resources;
@@ -254,14 +247,14 @@ std::vector<resource_content> mcp_client::read_resource(const std::string_view& 
 	req.method = "resources/read";
 	req.params["uri"] = uri;
 
-	auto response{ impl->send(req, timeout) };
-	if (!response.payload.has_value())
+	auto resp{ impl->send(req, timeout) };
+	if (!resp.payload.has_value())
 	{
-		throw std::runtime_error{ "read_resource failed: " + response.payload.error().message };
+		throw std::runtime_error{ "read_resource failed: " + resp.payload.error().message };
 	}
 
 	std::vector<resource_content> contents{};
-	for (const auto& content_json : response.payload.value()["contents"])
+	for (const auto& content_json : resp.payload.value()["contents"])
 	{
 		resource_content content{};
 		content.uri = content_json["uri"].get<std::string>();

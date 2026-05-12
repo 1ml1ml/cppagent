@@ -2,7 +2,7 @@
 #include <nlohmann/json.hpp>
 #include <memory>
 
-import openai_provider;
+import openai_chat_completion_provider;
 import llm_provider;
 import context;
 import message;

@@ -36,27 +36,21 @@ void mcp_manager::load(const nlohmann::json& config)
   }
 }
 
-nlohmann::json mcp_manager::get_tools_schema() const
+std::vector<tool_info> mcp_manager::get_tools(const std::chrono::milliseconds& timeout) const
 {
-	nlohmann::json tools{ nlohmann::json::array() };
-
+	std::vector<tool_info> tools{};
 	for (const auto& [server_name, client] : impl->clients)
 	{
-		for (const auto& tool : client->list_tools())
+		for (auto tool : client->list_tools(timeout))
 		{
-			nlohmann::json item{ nlohmann::json::object() };
-			item["type"] = "function";
-			item["function"]["name"] = server_name + "/" + tool.name;
-			item["function"]["description"] = tool.description;
-			item["function"]["parameters"] = tool.input_schema;
-			tools.push_back(std::move(item));
+			tool.name = server_name + "/" + tool.name;
+			tools.push_back(tool);
 		}
 	}
-
 	return tools;
 }
 
-nlohmann::json mcp_manager::call_tool(const std::string& prefixed_name, const nlohmann::json& arguments) const
+tool_result mcp_manager::call_tool(const std::string& prefixed_name, const nlohmann::json& arguments) const
 {
 	auto pos{ prefixed_name.find('/') };
 	if (pos == std::string::npos)
@@ -73,11 +67,5 @@ nlohmann::json mcp_manager::call_tool(const std::string& prefixed_name, const nl
 		throw std::runtime_error{ "Unknown MCP server: " + server_name };
 	}
 
-	auto result{ it->second->call_tool(tool_name, arguments) };
-
-	nlohmann::json response{ nlohmann::json::object() };
-	response["is_error"] = result.is_error;
-	response["content"] = result.content;
-
-	return response;
+	return it->second->call_tool(tool_name, arguments);
 }
