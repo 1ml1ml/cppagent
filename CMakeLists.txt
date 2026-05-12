@@ -11,8 +11,7 @@ if(MSVC)
 	add_compile_options(/W4 /WX- /EHsc /DNOMINMAX /utf-8)
 endif()
 
-find_package(nlohmann_json CONFIG REQUIRED)
-find_package(oai CONFIG REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # ── core ──
 add_subdirectory(core)
@@ -24,6 +23,7 @@ add_subdirectory(mcp_client)
 add_subdirectory(app)
 
 # ── external ──
+add_subdirectory(external/ai-sdk-cpp EXCLUDE_FROM_ALL)
 add_subdirectory(external/catch2 EXCLUDE_FROM_ALL)
 
 # ── tests ──

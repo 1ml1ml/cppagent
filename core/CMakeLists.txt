@@ -29,8 +29,8 @@ target_sources(cppagent_core
 target_link_libraries(cppagent_core
 	PUBLIC
 		nlohmann_json::nlohmann_json
-		oai::oai
 		mcp_client
+		ai::sdk
 	PRIVATE
 		$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:pthread>
 		$<$<CXX_COMPILER_ID:MSVC>:crypt32 ws2_32>
