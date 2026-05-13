@@ -41,7 +41,7 @@ int main()
   SetConsoleOutputCP(CP_UTF8);
 
   nlohmann::json config{};
-  config["model"] = "moonshot-v1-8k";
+  config["model"] = "kimi-k2.6";
   config["base_url"] = "https://api.moonshot.cn";
   config["api_key"] = load_api_key(R"(D:\Sources\cppagent\api_key.txt)");
 
@@ -57,19 +57,20 @@ int main()
 
   while (true)
   {
+    std::cout << "请输入提示词:";
+
     std::string promat{};
     std::getline(std::cin, promat);
 
-    ctx->append(std::make_shared<message>(message::role::user, message::type::text, promat));
+    ctx->append(std::make_shared<user_message>(promat));
     
     model_response_shared_ptr resp{};
     do
     {
-      resp = provider->generate(ctx, mcp->get_tools());
+      resp = provider->generate_text(ctx, mcp->get_tools());
     } while (!(resp->finish_reason == "stop" || resp->finish_reason == "length"));
 
-    std::cout.clear();
-    std::cout << *ctx->messages_ref().back() << std::endl;
+    std::cout << ctx->messages_ref().back()->get_content() << '\n' << std::endl;
   }
 
   return 0;

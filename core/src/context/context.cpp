@@ -69,7 +69,6 @@ std::ostream& operator<<(std::ostream& os, const context& ctx)
   {
     if (msg)
     {
-      os << "  " << *msg << '\n';
     }
   }
   os << "--- End Context ---";

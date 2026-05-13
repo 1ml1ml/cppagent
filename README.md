@@ -6,9 +6,8 @@ C++23 LLM Agent Framework with MCP (Model Context Protocol) support.
 
 - **C++23 Modules** — Modern modular C++ with `.ixx` interface units
 - **Multi-Provider LLM** — Pluggable provider registry via [ai-sdk-cpp](https://github.com/ClickHouse/ai-sdk-cpp)
-  - OpenAI / Anthropic / OpenAI-compatible APIs (OpenRouter, Moonshot, etc.)
+  - OpenAI / Anthropic / OpenAI-compatible APIs (OpenRouter, Moonshot, Kimi, etc.)
   - Automatic multi-step tool calling (framework handles tool → result → reply loop)
-  - Streaming support
 - **MCP Client** — Full Model Context Protocol client implementation
   - JSON-RPC 2.0 over stdio transport
   - Multi-server management with `mcp_manager`
@@ -22,9 +21,10 @@ C++23 LLM Agent Framework with MCP (Model Context Protocol) support.
 ```
 cppagent/
 ├── core/                          # LLM core library (STATIC)
-│   ├── message/                   # Chat message (role + type + content)
-│   │   ├── role: user / assistant
-│   │   └── type: text / tool_call / tool_result
+│   ├── message/                   # Chat message hierarchy
+│   │   ├── message (base)         # role + content
+│   │   ├── user_message           # attachments + tool_call_results
+│   │   └── assistant_message      # tool_calls
 │   ├── context/                   # Conversation context management
 │   └── provider/                  # LLM provider abstraction
 │       ├── llm_provider.ixx       # Provider interface + model_response
@@ -139,7 +139,7 @@ provider_registry::instance().register_factory(
 // Create and configure
 auto provider = provider_registry::instance().create("openai");
 nlohmann::json cfg;
-cfg["model"] = "moonshot-v1-8k";
+cfg["model"] = "kimi-k2.6";
 cfg["base_url"] = "https://api.moonshot.cn";  // no /v1 suffix
 cfg["api_key"] = "sk-xxx";
 provider->set_config(cfg);
@@ -147,13 +147,13 @@ provider->set_config(cfg);
 // Setup context + MCP
 auto ctx = std::make_shared<context>();
 ctx->set_instructions("You are a helpful assistant");
-ctx->append(std::make_shared<message>(message::role::user, message::type::text, "Hello!"));
+ctx->append(std::make_shared<user_message>("Hello!"));
 
 mcp_manager mcp;
 mcp.load(config);
 
 // Generate — tool calling is handled automatically by ai-sdk-cpp
-auto resp = provider->generate(ctx, mcp.get_tools());
+auto resp = provider->generate_text(ctx, mcp.get_tools());
 std::cout << resp->message->get_content() << "\n";
 ```
 
@@ -163,8 +163,8 @@ std::cout << resp->message->get_content() << "\n";
 - **PIMPL** pattern for all public classes
 - **Allman brace style** with 2-space indentation
 - **Unified initialization `{}`** throughout
-- **Message type enum** (`text`/`tool_call`/`tool_result`) separates content semantics from role
-- **ai-sdk-cpp** handles HTTP, JSON schema, retry, streaming, and multi-step tool loops
+- **Message hierarchy** — `message` base class with `user_message` / `assistant_message` subclasses; visitor pattern for provider-specific serialization
+- **ai-sdk-cpp** handles HTTP, JSON schema, retry, and multi-step tool loops
 
 ## Known Issues / Limitations
 

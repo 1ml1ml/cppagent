@@ -48,16 +48,12 @@ export using provider_unique_ptr = std::unique_ptr<llm_provider>;
 export class llm_provider
 {
 public:
-	using stream_callback = std::function<bool(std::string)>;
-
-public:
   virtual ~llm_provider() = default;
 
   virtual nlohmann::json get_config() const = 0;
   virtual void set_config(const nlohmann::json& config) = 0;
 
-  virtual model_response_shared_ptr generate( const context_shared_ptr& ctx, const std::vector<tool_info>& tools = {}, const stream_callback& callback = {}) = 0;
-  virtual std::future<model_response_shared_ptr> generate_async( const context_shared_ptr& ctx, const std::vector<tool_info>& tools = {}, const stream_callback& callback = {}) = 0;
+  virtual model_response_shared_ptr generate_text( const context_shared_ptr& ctx, const std::vector<tool_info>& tools = {}) = 0;
 };
 
 class llm_provider_factory;

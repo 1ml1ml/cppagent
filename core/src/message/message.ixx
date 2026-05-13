@@ -1,5 +1,6 @@
 module;
 
+#include <map>
 #include <vector>
 #include <memory>
 #include <string>
@@ -9,7 +10,12 @@ module;
 #include <filesystem>
 #include <string_view>
 
+#include "nlohmann/json.hpp"
+
 export module message;
+
+class message_visitor;
+export using visitor_shared_ptr = std::shared_ptr<message_visitor>;
 
 class message;
 export using message_shared_ptr = std::shared_ptr<message>;
@@ -24,13 +30,33 @@ public:
 	};
 	static const char* role_to_string(role r) noexcept;
 
-	enum class type
-	{
-		text,
-		tool_call,
-		tool_result,
-	};
+public:
+	message(const role& r, const std::string_view& content);
+	virtual ~message();
 
+public:
+	virtual void accept(const visitor_shared_ptr& visitor);
+
+public:
+	role get_role() const;
+	std::string_view get_content() const;
+
+private:
+	class impl;
+	std::unique_ptr<impl> impl{};
+};
+
+export struct tool_call_result
+{
+	std::string tool_call_id{};
+
+	bool error{};
+	nlohmann::json result{};
+};
+
+export class user_message : public message
+{
+public:
 	struct attachment
 	{
 	public:
@@ -43,21 +69,55 @@ public:
 	};
 
 public:
-	message();
-	message(const role& r, const type& t, const std::string_view& content, const std::vector<attachment>& attachments = {});
-
-	~message();
+	user_message(const std::string_view& content = {});
+	~user_message();
 
 public:
-	role get_role() const;
-	type get_type() const;
-	std::string_view get_content() const;
-	std::vector<attachment>& attachments_ref() const;
+	void accept(const visitor_shared_ptr& visitor) override;
+
+public:
+	const std::map<std::string, attachment>& get_attachments_ref() const;
+	void set_attachments(const std::map<std::string, attachment>& attachments);
+
+	const std::vector<tool_call_result>& get_tool_call_results_ref() const;
+	void set_tool_call_results(const std::vector<tool_call_result>& results);
 
 private:
 	class impl;
 	std::unique_ptr<impl> impl{};
 };
 
-export std::ostream& operator<<(std::ostream& os, message::role r);
-export std::ostream& operator<<(std::ostream& os, const message& msg);
+export struct tool_call
+{
+	std::string id{};
+	std::string tool_name{};
+	nlohmann::json arguments{};
+};
+
+export class assistant_message : public message
+{
+public:
+	assistant_message(const std::string_view& content = {});
+	~assistant_message();
+
+public:
+	void accept(const visitor_shared_ptr& visitor) override;
+
+public:
+	const std::vector<tool_call>& get_tool_calls_ref() const;
+	void set_tool_calls(const std::vector<tool_call>& calls);
+
+private:
+	class impl;
+	std::unique_ptr<impl> impl{};
+};
+
+export class message_visitor : public std::enable_shared_from_this<message_visitor>
+{
+public:
+	virtual ~message_visitor() = default;
+
+public:
+	virtual void visit_user_message(const std::shared_ptr<user_message>& message);
+	virtual void visit_assistant_message(const std::shared_ptr<assistant_message>& message);
+};

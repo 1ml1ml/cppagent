@@ -22,8 +22,7 @@ public:
   nlohmann::json get_config() const override;
   void set_config(const nlohmann::json& config) override;
 
-  model_response_shared_ptr generate(const context_shared_ptr& ctx, const std::vector<tool_info>& tools = {}, const stream_callback& callback = {}) override;
-  std::future<model_response_shared_ptr> generate_async(const context_shared_ptr& ctx, const std::vector<tool_info>& tools = {}, const stream_callback& callback = {}) override;
+  model_response_shared_ptr generate_text(const context_shared_ptr& ctx, const std::vector<tool_info>& tools = {}) override;
 
 private:
   class impl;
