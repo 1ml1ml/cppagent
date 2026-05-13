@@ -4,6 +4,7 @@
 
 #include <Windows.h>
 
+#include "ai/logger.h"
 #include "nlohmann/json.hpp"
 
 import context;
@@ -41,6 +42,9 @@ int main()
 {
 	SetConsoleCP(CP_UTF8);
 	SetConsoleOutputCP(CP_UTF8);
+
+	ai::logger::install_logger(
+		std::make_shared<ai::logger::ConsoleLogger>(ai::logger::LogLevel::kLogLevelDebug));
 
 	nlohmann::json config{};
 	config["model"] = "kimi-k2.6";
