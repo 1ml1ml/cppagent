@@ -4,18 +4,18 @@ module;
 #include <string>
 #include <vector>
 
-export module provider_registry;
+export module api_registry;
 
 import llm_provider;
 
-export class provider_registry
+export class api_registry
 {
 public:
-  static provider_registry& instance();
+  static api_registry& instance();
 
 private:
-  provider_registry();
-  ~provider_registry();
+  api_registry();
+  ~api_registry();
 
 public:
   provider_unique_ptr create(const std::string& provider_name) const;

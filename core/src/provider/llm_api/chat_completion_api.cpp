@@ -11,7 +11,7 @@ module;
 #include "ai/tools.h"
 #include "nlohmann/json.hpp"
 
-module openai_provider;
+module chat_completion_api;
 
 import llm_provider;
 
@@ -76,7 +76,7 @@ void message_to_go::visit_assistant_message(const std::shared_ptr<assistant_mess
 	}
 }
 
-class openai_provider::impl
+class chat_completion_api::impl
 {
 public:
 	nlohmann::json config{ nlohmann::json::object() };
@@ -84,7 +84,7 @@ public:
 	ai::GenerateOptions make_go(const context_shared_ptr& ctx, const std::vector<tool_info>& tools);
 };
 
-ai::GenerateOptions openai_provider::impl::make_go(const context_shared_ptr& ctx, const std::vector<tool_info>& tools)
+ai::GenerateOptions chat_completion_api::impl::make_go(const context_shared_ptr& ctx, const std::vector<tool_info>& tools)
 {
 	ai::GenerateOptions go{};
 	go.model = config["model"].get<std::string>();
@@ -113,24 +113,24 @@ ai::GenerateOptions openai_provider::impl::make_go(const context_shared_ptr& ctx
 	return go;
 }
 
-openai_provider::openai_provider() : llm_provider(),
+chat_completion_api::chat_completion_api() : llm_provider(),
 impl{ std::make_unique<class impl>() }
 {
 }
 
-openai_provider::~openai_provider() = default;
+chat_completion_api::~chat_completion_api() = default;
 
-void openai_provider::set_config(const nlohmann::json& config)
+void chat_completion_api::set_config(const nlohmann::json& config)
 {
 	impl->config = config;
 }
 
-nlohmann::json openai_provider::get_config() const
+nlohmann::json chat_completion_api::get_config() const
 {
 	return impl->config;
 }
 
-model_response_shared_ptr openai_provider::generate_text(const context_shared_ptr& ctx, const std::vector<tool_info>& tools)
+model_response_shared_ptr chat_completion_api::generate_text(const context_shared_ptr& ctx, const std::vector<tool_info>& tools)
 {
 	auto go{ impl->make_go(ctx, tools) };
 
@@ -179,12 +179,12 @@ model_response_shared_ptr openai_provider::generate_text(const context_shared_pt
 	return resp;
 }
 
-std::string_view openai_provider_factory::name() const
+std::string_view chat_completion_api_factory::name() const
 {
 	return "openai";
 }
 
-provider_unique_ptr openai_provider_factory::create() const
+provider_unique_ptr chat_completion_api_factory::create() const
 {
-	return std::make_unique<openai_provider>();
+	return std::make_unique<chat_completion_api>();
 }

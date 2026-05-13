@@ -12,8 +12,8 @@ import message;
 import mcp_client;
 import mcp_manager;
 import llm_provider;
-import openai_provider;
-import provider_registry;
+import chat_completion_api;
+import api_registry;
 
 std::string load_api_key(const std::string& path)
 {
@@ -45,8 +45,8 @@ int main()
   config["base_url"] = "https://api.moonshot.cn";
   config["api_key"] = load_api_key(R"(D:\Sources\cppagent\api_key.txt)");
 
-  provider_registry::instance().register_factory( "openai", std::make_shared<openai_provider_factory>() );
-  auto provider{ provider_registry::instance().create("openai") };
+  api_registry::instance().register_factory( "openai", std::make_shared<chat_completion_api_factory>() );
+  auto provider{ api_registry::instance().create("openai") };
   provider->set_config(config);
 
   auto mcp{ std::make_shared<mcp_manager>() };

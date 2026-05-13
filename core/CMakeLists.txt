@@ -4,7 +4,7 @@ target_include_directories(cppagent_core PUBLIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/mimetypes/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/provider/"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/provider/openai_provider/"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/provider/llm_api/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/message/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/context/"
 )
@@ -13,15 +13,15 @@ target_sources(cppagent_core
 	PUBLIC
 		FILE_SET cxx_modules TYPE CXX_MODULES FILES
 		"src/provider/llm_provider.ixx"
-		"src/provider/provider_registry.ixx"
-		"src/provider/openai_provider/openai_provider.ixx"
+		"src/provider/api_registry.ixx"
+		"src/provider/llm_api/chat_completion_api.ixx"
 		"src/message/message.ixx"
 		"src/context/context.ixx"
 	PRIVATE
 		"src/mimetypes/mimetypes.hpp"
 		"src/provider/llm_provider.cpp"
-		"src/provider/provider_registry.cpp"
-		"src/provider/openai_provider/openai_provider.cpp"
+		"src/provider/api_registry.cpp"
+		"src/provider/llm_api/chat_completion_api.cpp"
 		"src/context/context.cpp"
 		"src/message/message.cpp"
 )
