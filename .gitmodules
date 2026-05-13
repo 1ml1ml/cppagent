@@ -1,0 +1,6 @@
+[submodule "external/ai-sdk-cpp"]
+	path = external/ai-sdk-cpp
+	url = https://github.com/ClickHouse/ai-sdk-cpp.git
+[submodule "external/catch2"]
+	path = external/catch2
+	url = https://github.com/catchorg/Catch2.git

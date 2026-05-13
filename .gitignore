@@ -11,7 +11,6 @@
 *.dll
 *.lib
 *.exp
-/external/catch2/
 /docs/
 
 # secrets
