@@ -26,10 +26,10 @@ cppagent/
 │   │   ├── user_message           # attachments + tool_call_results
 │   │   └── assistant_message      # tool_calls
 │   ├── context/                   # Conversation context management
-│   └── provider/                  # LLM provider abstraction
-│       ├── llm_provider.ixx       # Provider interface + model_response
-│       ├── provider_registry.ixx  # Thread-safe provider factory registry
-│       └── openai_provider/       # OpenAI-compatible implementation (ai-sdk-cpp)
+│   └── llm_api/                   # LLM provider abstraction
+│       ├── llm_api.ixx            # Provider interface
+│       ├── api_registry.ixx       # Thread-safe provider factory registry
+│       └── chat_completion_api/   # OpenAI-compatible implementation (ai-sdk-cpp)
 │
 ├── mcp_client/                    # MCP client library (STATIC)
 │   ├── jsonrpc/                   # JSON-RPC 2.0 message types
@@ -43,11 +43,12 @@ cppagent/
 │       ├── get_tools_schema()     # Aggregate tools with server prefix
 │       └── call_tool("server/tool", args)
 │
-├── external/                      # Embedded third-party dependencies
-│   └── ai-sdk-cpp/                # ClickHouse AI SDK (C++20)
+├── external/                      # Embedded third-party dependencies (git submodules)
+│   ├── ai-sdk-cpp/                # ClickHouse AI SDK (C++20)
+│   └── catch2/                    # Catch2 v3 (tests disabled)
 │
 ├── app/                           # CLI executable
-└── tests/                         # Catch2 unit tests (disabled — see #7)
+└── tests/                         # Catch2 unit tests (disabled — see Known Issues)
 ```
 
 ## Prerequisites
@@ -60,6 +61,14 @@ cppagent/
 ## Build
 
 ```bash
+# Clone with submodules
+git clone --recursive https://github.com/1ml1ml/cppagent.git
+cd cppagent
+
+# Or if already cloned, init submodules
+git submodule update --init --recursive
+
+# Build
 cmake -B build -S .
 cmake --build build --config Release
 ```
@@ -82,40 +91,29 @@ Console input is read in a REPL loop. Type your prompt and press Enter.
 
 ## MCP Configuration
 
-Create `mcp_config.json`:
+MCP server config is hardcoded in `app/main.cpp` as a JSON string. Edit `load_mcp_config()` in `app/main.cpp` to customize:
 
-```json
-{
+```cpp
+constexpr auto mcp_config_json = R"({
   "mcpServers": {
     "filesystem": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:/Users/xxx/Documents"]
-    },
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx"
-      }
     }
   }
-}
+})";
 ```
 
 ```cpp
-#include <nlohmann/json.hpp>
 import mcp_manager;
 
-// Load config
-auto config = nlohmann::json::parse(std::ifstream("mcp_config.json"));
-
+// Load config (hardcoded or from file)
 mcp_manager mcp;
 mcp.load(config);
 
 // Get aggregated tools (prefixed as "server/tool")
 auto tools = mcp.get_tools_schema();
-// [{"type":"function","function":{"name":"filesystem/read_file",...}},
-//  {"type":"function","function":{"name":"github/create_issue",...}}]
+// [{"type":"function","function":{"name":"filesystem/read_file",...}}]
 
 // Call tool via manager (handles routing to correct server)
 auto result = mcp.call_tool("filesystem/read_file", {{"path", "/tmp/test.txt"}});
@@ -127,17 +125,17 @@ auto result = mcp.call_tool("filesystem/read_file", {{"path", "/tmp/test.txt"}})
 #include <nlohmann/json.hpp>
 import context;
 import message;
-import llm_provider;
-import openai_provider;
-import provider_registry;
+import llm_api;
+import chat_completion_api;
+import api_registry;
 import mcp_manager;
 
 // Register provider
-provider_registry::instance().register_factory(
-    "openai", std::make_shared<openai_provider_factory>());
+api_registry::instance().register_provider(
+    "openai", std::make_shared<chat_completion_api>());
 
 // Create and configure
-auto provider = provider_registry::instance().create("openai");
+auto provider = api_registry::instance().create("openai");
 nlohmann::json cfg;
 cfg["model"] = "kimi-k2.6";
 cfg["base_url"] = "https://api.moonshot.cn";  // no /v1 suffix
@@ -153,8 +151,8 @@ mcp_manager mcp;
 mcp.load(config);
 
 // Generate — tool calling is handled automatically by ai-sdk-cpp
-auto resp = provider->generate_text(ctx, mcp.get_tools());
-std::cout << resp->message->get_content() << "\n";
+auto resp = provider->generate(ctx);
+std::cout << resp->get_text() << "\n";
 ```
 
 ## Key Design Decisions
