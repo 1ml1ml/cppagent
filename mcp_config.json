@@ -1,9 +1,8 @@
 {
   "mcpServers": {
     "filesystem": {
-      "command": "cmd.exe",
-      "args": [ "/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "D:/Sources/cppagent" ],
-      "env": {}
+      "command": "npx",
+      "args": [ "-y", "@modelcontextprotocol/server-filesystem", "D:/" ]
     }
   }
 }

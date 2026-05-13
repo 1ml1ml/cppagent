@@ -8,7 +8,7 @@ module;
 
 module api_registry;
 
-import llm_provider;
+import llm_api;
 
 api_registry& api_registry::instance()
 {
@@ -20,7 +20,7 @@ class api_registry::impl
 {
 public:
   mutable std::shared_mutex mutex{};
-  std::map<std::string, provider_factory_shared_ptr> factories{};
+  std::map<std::string, api_factory_shared_ptr> factories{};
 };
 
 api_registry::api_registry()
@@ -30,7 +30,7 @@ api_registry::api_registry()
 
 api_registry::~api_registry() = default;
 
-provider_unique_ptr api_registry::create(const std::string& provider_name) const
+api_unique_ptr api_registry::create(const std::string& provider_name) const
 {
   std::shared_lock lock(impl->mutex);
 
@@ -42,7 +42,7 @@ provider_unique_ptr api_registry::create(const std::string& provider_name) const
   return it->second->create();
 }
 
-void api_registry::register_factory(const std::string& provider_name, const provider_factory_shared_ptr& factory)
+void api_registry::register_factory(const std::string& provider_name, const api_factory_shared_ptr& factory)
 {
   std::unique_lock lock(impl->mutex);
   impl->factories[provider_name] = factory;

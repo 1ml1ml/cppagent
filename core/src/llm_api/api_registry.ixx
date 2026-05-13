@@ -6,7 +6,7 @@ module;
 
 export module api_registry;
 
-import llm_provider;
+import llm_api;
 
 export class api_registry
 {
@@ -18,9 +18,9 @@ private:
   ~api_registry();
 
 public:
-  provider_unique_ptr create(const std::string& provider_name) const;
+  api_unique_ptr create(const std::string& provider_name) const;
 
-  void register_factory(const std::string& provider_name, const provider_factory_shared_ptr& factory);
+  void register_factory(const std::string& provider_name, const api_factory_shared_ptr& factory);
   void unregister(const std::string& provider_name);
 
   std::vector<std::string> provider_names() const;

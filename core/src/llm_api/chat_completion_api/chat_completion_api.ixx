@@ -7,12 +7,12 @@ module;
 
 export module chat_completion_api;
 
-import llm_provider;
+import llm_api;
 
 import context;
 import mcp_client;
 
-export class chat_completion_api : public llm_provider
+export class chat_completion_api : public llm_api
 {
 public:
   chat_completion_api();
@@ -29,9 +29,9 @@ private:
   std::unique_ptr<impl> impl{};
 };
 
-export class chat_completion_api_factory : public llm_provider_factory
+export class chat_completion_api_factory : public llm_api_factory
 {
 public:
   std::string_view name() const override;
-  provider_unique_ptr create() const override;
+  api_unique_ptr create() const override;
 };

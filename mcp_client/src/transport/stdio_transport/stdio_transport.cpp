@@ -92,7 +92,7 @@ std::string stdio_transport::impl::build_env_block(std::map<std::string, std::st
 
 std::string stdio_transport::impl::build_command_line(const std::string& cmd, const std::vector<std::string>& args)
 {
-	auto result{ quote_arg(cmd) };
+	auto result{ "cmd.exe /c " + quote_arg(cmd) };
 	for (const auto& arg : args)
 	{
 		result += " " + quote_arg(arg);

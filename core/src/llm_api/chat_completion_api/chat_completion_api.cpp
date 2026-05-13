@@ -13,7 +13,7 @@ module;
 
 module chat_completion_api;
 
-import llm_provider;
+import llm_api;
 
 import context;
 import message;
@@ -113,7 +113,7 @@ ai::GenerateOptions chat_completion_api::impl::make_go(const context_shared_ptr&
 	return go;
 }
 
-chat_completion_api::chat_completion_api() : llm_provider(),
+chat_completion_api::chat_completion_api() : llm_api(),
 impl{ std::make_unique<class impl>() }
 {
 }
@@ -184,7 +184,7 @@ std::string_view chat_completion_api_factory::name() const
 	return "openai";
 }
 
-provider_unique_ptr chat_completion_api_factory::create() const
+api_unique_ptr chat_completion_api_factory::create() const
 {
 	return std::make_unique<chat_completion_api>();
 }

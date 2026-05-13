@@ -7,13 +7,13 @@
 
 #include "nlohmann/json.hpp"
 
+import llm_api;
 import context;
 import message;
 import mcp_client;
 import mcp_manager;
-import llm_provider;
-import chat_completion_api;
 import api_registry;
+import chat_completion_api;
 
 std::string load_api_key(const std::string& path)
 {
