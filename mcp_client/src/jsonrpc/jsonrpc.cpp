@@ -1,7 +1,7 @@
 module;
 
-#include <cstdint>
 #include <string>
+#include <cstdint>
 
 #include "nlohmann/json.hpp"
 

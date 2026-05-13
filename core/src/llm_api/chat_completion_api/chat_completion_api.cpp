@@ -1,12 +1,12 @@
 module;
 
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
-#include "ai/openai.h"
 #include "ai/tools.h"
+#include "ai/openai.h"
 #include "nlohmann/json.hpp"
 
 module chat_completion_api;

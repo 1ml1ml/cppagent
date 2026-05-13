@@ -7,9 +7,8 @@ module;
 
 export module chat_completion_api;
 
-import llm_api;
-
 import context;
+import llm_api;
 import mcp_client;
 
 export class chat_completion_api : public llm_api

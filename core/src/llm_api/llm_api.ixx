@@ -9,8 +9,8 @@ module;
 export module llm_api;
 
 import context;
-import mcp_client;
 import message;
+import mcp_client;
 
 export struct usage_info
 {
