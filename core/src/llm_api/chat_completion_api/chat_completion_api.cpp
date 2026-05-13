@@ -1,11 +1,9 @@
 module;
 
-#include <future>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <stdexcept>
-#include <functional>
 
 #include "ai/openai.h"
 #include "ai/tools.h"
@@ -13,9 +11,8 @@ module;
 
 module chat_completion_api;
 
-import llm_api;
-
 import context;
+import llm_api;
 import message;
 import mcp_client;
 

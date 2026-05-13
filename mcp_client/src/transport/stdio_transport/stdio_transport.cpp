@@ -1,11 +1,13 @@
+module;
+
+#include <cstring>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
-#include <vector>
 #include <thread>
 #include <variant>
-#include <cstring>
-#include <stdexcept>
+#include <vector>
 
 #include <windows.h>
 
@@ -13,9 +15,8 @@
 
 module stdio_transport;
 
-import transport;
-
 import jsonrpc;
+import transport;
 
 class stdio_transport::impl
 {

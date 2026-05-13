@@ -1,7 +1,5 @@
 module;
 
-#include <functional>
-#include <future>
 #include <memory>
 #include <string>
 #include <vector>
@@ -11,9 +9,8 @@ module;
 export module llm_api;
 
 import context;
-import message;
 import mcp_client;
-import mcp_manager;
+import message;
 
 export struct usage_info
 {
