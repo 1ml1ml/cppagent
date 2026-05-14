@@ -57,22 +57,3 @@ void context::clear()
 {
   impl->msgs.clear();
 }
-
-std::ostream& operator<<(std::ostream& os, const context& ctx)
-{
-  if (ctx.size() == 0)
-  {
-    return os << "<empty context>";
-  }
-
-  os << "--- Context (" << ctx.size() << " messages) ---\n";
-  for (const auto& msg : ctx.messages_ref())
-  {
-    if (msg)
-    {
-    }
-  }
-  os << "--- End Context ---";
-
-  return os;
-}

@@ -1,4 +1,3 @@
-#include <memory>
 #include <fstream>
 #include <iostream>
 
@@ -7,77 +6,86 @@
 #include "ai/logger.h"
 #include "nlohmann/json.hpp"
 
-import context;
-import llm_api;
-import message;
-import mcp_client;
-import mcp_manager;
+import agent;
 import api_registry;
 import chat_completion_api;
+import context;
+import message;
+import mcp_manager;
 
 std::string load_api_key(const std::string& path)
 {
-	std::string key{};
-	if (std::ifstream file{ path }; file.is_open())
-	{
-		std::getline(file, key);
-	}
-	return key;
+  std::string key{};
+  if (std::ifstream file{ path }; file.is_open())
+  {
+    std::getline(file, key);
+  }
+  return key;
 }
 
 nlohmann::json load_mcp_config()
 {
-	constexpr auto mcp_config_json = R"({
-  "mcpServers": {
+  return nlohmann::json::parse(
+    R"({ "mcpServers": {
     "filesystem": {
       "command": "npx",
       "args": [ "-y", "@modelcontextprotocol/server-filesystem", "D:/" ]
     }
   }
-})";
-	return nlohmann::json::parse(mcp_config_json);
+})");
 }
 
 int main()
 {
-	SetConsoleCP(CP_UTF8);
-	SetConsoleOutputCP(CP_UTF8);
+  SetConsoleCP(CP_UTF8);
+  SetConsoleOutputCP(CP_UTF8);
 
-	ai::logger::install_logger(
-		std::make_shared<ai::logger::ConsoleLogger>(ai::logger::LogLevel::kLogLevelDebug));
+  std::static_pointer_cast<ai::logger::ConsoleLogger>(
+    ai::logger::detail::logger_instance()
+  )->set_min_level(ai::logger::LogLevel::kLogLevelInfo);
 
-	nlohmann::json config{};
-	config["model"] = "kimi-k2.6";
-	config["base_url"] = "https://api.moonshot.cn";
-	config["api_key"] = load_api_key(R"(D:\Sources\cppagent\api_key.txt)");
+  // Register API factories
+  api_registry::instance().register_factory(
+    "openai", std::make_shared<chat_completion_api_factory>()
+  );
 
-	api_registry::instance().register_factory("openai", std::make_shared<chat_completion_api_factory>());
-	auto provider{ api_registry::instance().create("openai") };
-	provider->set_config(config);
+  // Configure agent
+  auto chat_agent{ std::make_shared<agent>() };
 
-	auto mcp{ std::make_shared<mcp_manager>() };
-	mcp->load(load_mcp_config());
+  nlohmann::json model_config{};
+  model_config["api"] = "openai";
+  model_config["model"] = "moonshot-v1-128k";
+  model_config["base_url"] = "https://api.moonshot.cn";
+  model_config["api_key"] = load_api_key(R"(D:\Sources\cppagent\api_key.txt)");
+  chat_agent->set_model_config(model_config);
 
-	auto ctx{ std::make_shared<context>() };
-	ctx->set_instructions("you are a helpful assistant");
+  auto mcp{ std::make_shared<mcp_manager>() };
+  mcp->load(load_mcp_config());
+  chat_agent->set_mcp_manager(mcp);
 
-	while (true)
-	{
-		std::cout << "请输入提示词:";
+  // Chat context
+  auto ctx{ std::make_shared<context>() };
+  ctx->set_instructions("you are a helpful assistant");
 
-		std::string promat{};
-		std::getline(std::cin, promat);
+  // Main loop
+  while (true)
+  {
+    std::cout << "请输入提示词:";
 
-		ctx->append(std::make_shared<user_message>(promat));
+    std::string prompt{};
+    std::getline(std::cin, prompt);
 
-		model_response_shared_ptr resp{};
-		do
-		{
-			resp = provider->generate_text(ctx, mcp->get_tools());
-		} while (!(resp->finish_reason == "stop" || resp->finish_reason == "length"));
+    if (prompt == "/exit")
+    {
+      break;
+    }
 
-		std::cout << ctx->messages_ref().back()->get_content() << '\n' << std::endl;
-	}
+    ctx->append(std::make_shared<user_message>(prompt));
 
-	return 0;
+    chat_agent->generate_text(ctx);
+
+    std::cout << ctx->messages_ref().back()->get_content() << '\n' << std::endl;
+  }
+
+  return 0;
 }

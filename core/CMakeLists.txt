@@ -7,6 +7,7 @@ target_include_directories(cppagent_core PUBLIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/llm_api/chat_completion_api/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/message/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/context/"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/agent/"
 )
 
 target_sources(cppagent_core
@@ -17,6 +18,7 @@ target_sources(cppagent_core
 		"src/llm_api/chat_completion_api/chat_completion_api.ixx"
 		"src/message/message.ixx"
 		"src/context/context.ixx"
+		"src/agent/agent.ixx" 
 
 	PRIVATE
 
@@ -25,7 +27,7 @@ target_sources(cppagent_core
 		"src/llm_api/chat_completion_api/chat_completion_api.cpp"
 		"src/context/context.cpp"
 		"src/message/message.cpp"
-)
+		"src/agent/agent.cpp")
 
 target_link_libraries(cppagent_core
 	PUBLIC

@@ -2,7 +2,6 @@ module;
 
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "nlohmann/json.hpp"
 
@@ -47,10 +46,7 @@ export class llm_api
 public:
   virtual ~llm_api() = default;
 
-  virtual nlohmann::json get_config() const = 0;
-  virtual void set_config(const nlohmann::json& config) = 0;
-
-  virtual model_response_shared_ptr generate_text( const context_shared_ptr& ctx, const std::vector<tool_info>& tools = {}) = 0;
+  virtual model_response_shared_ptr generate_text(nlohmann::json& config, const context_shared_ptr& ctx, const std::vector<tool_info>& tools = {}) = 0;
 };
 
 class llm_api_factory;

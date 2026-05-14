@@ -1,6 +1,7 @@
 module;
 
 #include <map>
+#include <format>
 #include <chrono>
 #include <vector>
 #include <stdexcept>
@@ -43,8 +44,29 @@ std::vector<tool_info> mcp_manager::get_tools(const std::chrono::milliseconds& t
 	{
 		for (auto tool : client->list_tools(timeout))
 		{
-			tools.push_back(tool);
+			tool.name = std::format("{}_{}", server_name, tool.name);
+			tools.push_back(std::move(tool));
 		}
 	}
 	return tools;
+}
+
+tool_result mcp_manager::call_tool(const std::string_view& name, const nlohmann::json& arguments, const std::chrono::milliseconds& timeout) const
+{
+	auto pos{ name.find('_') };
+	if (pos == std::string_view::npos)
+	{
+		throw std::runtime_error{ std::format("call_tool: invalid tool name '{}', expected format 'server_name/tool_name'", name) };
+	}
+
+	auto server_name{ name.substr(0, pos) };
+	auto tool_name{ name.substr(pos + 1) };
+
+	auto it{ impl->clients.find(std::string(server_name)) };
+	if (it == impl->clients.end())
+	{
+		throw std::runtime_error{ std::format("call_tool: server '{}' not found", server_name) };
+	}
+
+	return it->second->call_tool(tool_name, arguments, timeout);
 }

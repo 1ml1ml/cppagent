@@ -33,5 +33,3 @@ private:
   class impl;
   std::unique_ptr<impl> impl{};
 };
-
-export std::ostream& operator<<(std::ostream& os, const context& ctx);

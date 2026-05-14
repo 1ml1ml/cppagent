@@ -73,30 +73,14 @@ void message_to_go::visit_assistant_message(const std::shared_ptr<assistant_mess
 	}
 }
 
-class chat_completion_api::impl
-{
-public:
-	nlohmann::json config{ nlohmann::json::object() };
-
-	ai::GenerateOptions make_go(const context_shared_ptr& ctx, const std::vector<tool_info>& tools);
-};
-
-ai::GenerateOptions chat_completion_api::impl::make_go(const context_shared_ptr& ctx, const std::vector<tool_info>& tools)
+ai::GenerateOptions make_go(const nlohmann::json& config, const context_shared_ptr& ctx, const std::vector<tool_info>& tools)
 {
 	ai::GenerateOptions go{};
 	go.model = config["model"].get<std::string>();
 
 	for (const auto& tool : tools)
 	{
-		go.tools.insert(std::pair{ tool.name, ai::Tool{ tool.description, tool.input_schema, [&ctx, &tool](const ai::JsonValue& args, const ai::ToolExecutionContext& context) -> ai::JsonValue
-			{
-				auto result{ tool.exec(args) };
-				if (result.is_error)
-				{
-					throw std::runtime_error{ result.content };
-				}
-				return result.content;
-			} } });
+		go.tools.insert(std::pair{ tool.name, ai::Tool{tool.description, tool.input_schema} });
 	}
 
 	go.system = ctx->get_instructions();
@@ -110,28 +94,13 @@ ai::GenerateOptions chat_completion_api::impl::make_go(const context_shared_ptr&
 	return go;
 }
 
-chat_completion_api::chat_completion_api() : llm_api(),
-impl{ std::make_unique<class impl>() }
+model_response_shared_ptr chat_completion_api::generate_text(nlohmann::json& config, const context_shared_ptr& ctx, const std::vector<tool_info>& tools)
 {
-}
+	auto go{ make_go(config, ctx, tools) };
 
-chat_completion_api::~chat_completion_api() = default;
+	auto client{ ai::openai::create_client(config["api_key"].get<std::string>(), config["base_url"].get<std::string>()) };
 
-void chat_completion_api::set_config(const nlohmann::json& config)
-{
-	impl->config = config;
-}
-
-nlohmann::json chat_completion_api::get_config() const
-{
-	return impl->config;
-}
-
-model_response_shared_ptr chat_completion_api::generate_text(const context_shared_ptr& ctx, const std::vector<tool_info>& tools)
-{
-	auto go{ impl->make_go(ctx, tools) };
-
-	auto result{ ai::openai::create_client(impl->config["api_key"].get<std::string>(), impl->config["base_url"].get<std::string>()).generate_text(go) };
+	auto result{ client.generate_text(go) };
 	if (!result.is_success())
 	{
 		throw std::runtime_error{ result.error_message() };
@@ -147,7 +116,6 @@ model_response_shared_ptr chat_completion_api::generate_text(const context_share
 
 	if (result.finish_reason == ai::FinishReason::kFinishReasonStop)
 	{
-		ctx->append(std::make_shared<assistant_message>(result.text));
 		resp->message = std::make_shared<assistant_message>(result.text);
 	}
 	else if (result.finish_reason == ai::FinishReason::kFinishReasonToolCalls)
@@ -160,17 +128,8 @@ model_response_shared_ptr chat_completion_api::generate_text(const context_share
 			tool_calls.emplace_back(tool_call.id, tool_call.tool_name, tool_call.arguments);
 		}
 		assistant_message->set_tool_calls(tool_calls);
-		ctx->append(assistant_message);
 
-		auto user_message{ std::make_shared<class user_message>() };
-		
-		std::vector<tool_call_result> tool_results{};
-		for (const auto& tool_result : result.tool_results)
-		{
-			tool_results.emplace_back(tool_result.tool_call_id, tool_result.error.has_value(), tool_result.result);
-		}
-		user_message->set_tool_call_results(tool_results);
-		ctx->append(user_message);
+		resp->message = assistant_message;
 	}
 
 	return resp;
@@ -178,7 +137,7 @@ model_response_shared_ptr chat_completion_api::generate_text(const context_share
 
 std::string_view chat_completion_api_factory::name() const
 {
-	return "openai";
+	return "chat_completion_api";
 }
 
 api_unique_ptr chat_completion_api_factory::create() const

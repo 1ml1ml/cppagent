@@ -25,16 +25,9 @@ export struct tool_result
 export struct tool_info
 {
 public:
-  tool_result exec(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 }) const;
-
-public:
   std::string name{};
   std::string description{};
   nlohmann::json input_schema{};
-
-private:
-  friend class mcp_client;
-  mcp_client_shared_ptr client{};
 };
 
 export struct resource_info
