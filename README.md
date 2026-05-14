@@ -47,7 +47,10 @@ cppagent/
 │   ├── ai-sdk-cpp/                # ClickHouse AI SDK (C++20)
 │   └── catch2/                    # Catch2 v3 (tests disabled)
 │
-├── app/                           # CLI executable
+├── agent/                         # High-level agent (conversation loop + tool handling)
+│   └── generate_text(ctx)         # Auto-handles multi-step tool calls
+│
+├── app/                           # CLI executable (assembly + REPL)
 └── tests/                         # Catch2 unit tests (disabled — see Known Issues)
 ```
 
@@ -78,16 +81,15 @@ cmake --build build --config Release
 ## Run
 
 ```bash
-# Windows
-set OPENAI_API_KEY=sk-xxxxx
+# Windows — API key is loaded from D:\Sources\cppagent\api_key.txt
 build\app\Release\cppagent.exe
 
 # Linux/WSL
-export OPENAI_API_KEY=sk-xxxxx
 ./build/app/cppagent
 ```
 
 Console input is read in a REPL loop. Type your prompt and press Enter.
+Type `/exit` to quit.
 
 ## MCP Configuration
 
@@ -119,40 +121,44 @@ auto tools = mcp.get_tools_schema();
 auto result = mcp.call_tool("filesystem/read_file", {{"path", "/tmp/test.txt"}});
 ```
 
-## LLM Provider Usage
+## Agent Usage
+
+The `agent` class encapsulates the conversation loop and tool-call handling:
 
 ```cpp
 #include <nlohmann/json.hpp>
+import agent;
+import api_registry;
+import chat_completion_api;
 import context;
 import message;
-import llm_api;
-import chat_completion_api;
-import api_registry;
 import mcp_manager;
 
-// Register provider
-api_registry::instance().register_provider(
-    "openai", std::make_shared<chat_completion_api>());
+// 1. Register provider factory
+api_registry::instance().register_factory(
+    "openai", std::make_shared<chat_completion_api_factory>());
 
-// Create and configure
-auto provider = api_registry::instance().create("openai");
-nlohmann::json cfg;
-cfg["model"] = "kimi-k2.6";
-cfg["base_url"] = "https://api.moonshot.cn";  // no /v1 suffix
-cfg["api_key"] = "sk-xxx";
-provider->set_config(cfg);
+// 2. Create and configure agent
+auto chat_agent = std::make_shared<agent>();
 
-// Setup context + MCP
+nlohmann::json model_config;
+model_config["api"]     = "openai";
+model_config["model"]   = "moonshot-v1-128k";
+model_config["base_url"]= "https://api.moonshot.cn";
+model_config["api_key"] = "sk-xxx";
+chat_agent->set_model_config(model_config);
+
+auto mcp = std::make_shared<mcp_manager>();
+mcp->load(mcp_config_json);
+chat_agent->set_mcp_manager(mcp);
+
+// 3. Chat
 auto ctx = std::make_shared<context>();
 ctx->set_instructions("You are a helpful assistant");
-ctx->append(std::make_shared<user_message>("Hello!"));
+ctx->append(std::make_shared<user_message>("List files in D:/"));
 
-mcp_manager mcp;
-mcp.load(config);
-
-// Generate — tool calling is handled automatically by ai-sdk-cpp
-auto resp = provider->generate(ctx);
-std::cout << resp->get_text() << "\n";
+chat_agent->generate_text(ctx);  // auto-handles tool calls
+std::cout << ctx->messages_ref().back()->get_content() << "\n";
 ```
 
 ## Key Design Decisions
@@ -162,7 +168,8 @@ std::cout << resp->get_text() << "\n";
 - **Allman brace style** with 2-space indentation
 - **Unified initialization `{}`** throughout
 - **Message hierarchy** — `message` base class with `user_message` / `assistant_message` subclasses; visitor pattern for provider-specific serialization
-- **ai-sdk-cpp** handles HTTP, JSON schema, retry, and multi-step tool loops
+- **agent** class wraps the full generate + tool-call + result loop
+- **ai-sdk-cpp** handles HTTP, JSON schema, retry logic
 
 ## Known Issues / Limitations
 
