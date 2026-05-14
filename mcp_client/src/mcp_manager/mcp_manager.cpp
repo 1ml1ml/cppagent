@@ -27,7 +27,7 @@ mcp_manager::~mcp_manager() = default;
 
 void mcp_manager::load(const nlohmann::json& config)
 {
-  for (const auto& [server_name, server_config] : config["mcpServers"].items())
+  for (const auto& [server_name, server_config] : config.items())
   {
 		auto client{ std::make_shared<mcp_client>(std::make_unique<stdio_transport>(server_config["command"].get<std::string>(), server_config.value("args", std::vector<std::string>{}), server_config.value("env", std::map<std::string, std::string>{}))) };
 		client->set_name("cppagent.exe");

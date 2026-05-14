@@ -1,11 +1,12 @@
 #include <catch2/catch_test_macros.hpp>
+
 #include "nlohmann/json.hpp"
 
 import agent;
-import context;
-import message;
 import api_registry;
 import chat_completion_api;
+import context;
+import message;
 
 TEST_CASE("agent default construction", "[agent]")
 {

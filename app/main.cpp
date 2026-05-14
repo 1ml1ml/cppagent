@@ -18,7 +18,7 @@ int main()
   SetConsoleOutputCP(CP_UTF8);
 
   app_config cfg{};
-  cfg.load(std::filesystem::current_path() / "config.json");
+  cfg.load(R"(D:\Sources\cppagent\config.json)");
 
   api_registry::instance().register_factory(cfg.model_config()["api"].get<std::string>(), std::make_shared<chat_completion_api_factory>());
 

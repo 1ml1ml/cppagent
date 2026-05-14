@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
-import llm_api;
 import api_registry;
+import llm_api;
 import chat_completion_api;
 
 TEST_CASE("api_registry singleton", "[api_registry]")
@@ -55,4 +55,17 @@ TEST_CASE("api_registry unregister", "[api_registry]")
 
   reg.unregister("openai");
   REQUIRE(reg.has_provider("openai") == false);
+}
+
+TEST_CASE("api_registry clear", "[api_registry]")
+{
+  auto& reg = api_registry::instance();
+  reg.clear();
+
+  reg.register_factory("openai", std::make_shared<chat_completion_api_factory>());
+  reg.register_factory("anthropic", std::make_shared<chat_completion_api_factory>());
+  REQUIRE(reg.provider_names().size() == 2);
+
+  reg.clear();
+  REQUIRE(reg.provider_names().empty());
 }
