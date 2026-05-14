@@ -1,129 +1,139 @@
 # cppagent
 
-C++23 LLM Agent Framework with MCP (Model Context Protocol) support.
+基于 C++20 Modules 的 LLM Agent 框架，支持 MCP (Model Context Protocol)。
 
-## Features
+## 特性
 
-- **C++23 Modules** — Modern modular C++ with `.ixx` interface units
-- **Multi-Provider LLM** — Pluggable provider registry via [ai-sdk-cpp](https://github.com/ClickHouse/ai-sdk-cpp)
-  - OpenAI / Anthropic / OpenAI-compatible APIs (OpenRouter, Moonshot, Kimi, etc.)
-  - Automatic multi-step tool calling (framework handles tool → result → reply loop)
-- **MCP Client** — Full Model Context Protocol client implementation
-  - JSON-RPC 2.0 over stdio transport
-  - Multi-server management with `mcp_manager`
-  - Tool discovery and invocation with server namespacing (`server/tool`)
-  - Resource listing and reading
+- **C++20 Modules** — 使用 `.ixx` 接口单元，现代模块化 C++
+- **多厂商 LLM** — 通过 [ai-sdk-cpp](https://github.com/ClickHouse/ai-sdk-cpp) 实现可插拔的 Provider 注册表
+  - 支持 OpenAI、Anthropic、OpenRouter、Moonshot、Kimi 等兼容 OpenAI API 的服务
+  - 自动多步 tool calling（框架自动处理 tool → result → reply 循环）
+- **MCP 客户端** — 完整的 Model Context Protocol 客户端实现
+  - JSON-RPC 2.0 over stdio 传输
+  - `mcp_manager` 多服务器管理
+  - Tool 发现与调用，带 server 前缀命名空间（`server/tool`）
+  - Resource 列表与读取
+- **配置管理** — `app_config` 从 JSON 文件统一读取模型配置和 MCP 服务器配置
 - **CMake 3.28+**
-- **Windows-focused** — `app` uses Windows console APIs; core libraries compile on Linux/WSL
+- **Windows 为主** — `app` 使用 Windows 控制台 API；核心库可在 Linux/WSL 编译
 
-## Architecture
+## 项目结构
 
 ```
 cppagent/
-├── core/                          # LLM core library (STATIC)
-│   ├── message/                   # Chat message hierarchy
-│   │   ├── message (base)         # role + content
+├── core/                          # LLM 核心库 (STATIC)
+│   ├── message/                   # 聊天消息层次结构
+│   │   ├── message (基类)         # role + content
 │   │   ├── user_message           # attachments + tool_call_results
 │   │   └── assistant_message      # tool_calls
-│   ├── context/                   # Conversation context management
-│   └── llm_api/                   # LLM provider abstraction
-│       ├── llm_api.ixx            # Provider interface
-│       ├── api_registry.ixx       # Thread-safe provider factory registry
-│       └── chat_completion_api/   # OpenAI-compatible implementation (ai-sdk-cpp)
+│   ├── context/                   # 对话上下文管理
+│   ├── llm_api/                   # LLM Provider 抽象
+│   │   ├── llm_api.ixx            # Provider 接口
+│   │   ├── api_registry.ixx       # 线程安全的 Provider 工厂注册表
+│   │   └── chat_completion_api/   # OpenAI 兼容实现 (ai-sdk-cpp)
+│   ├── agent/                     # 高层 Agent（对话循环 + tool 处理）
+│   │   └── generate_text(ctx)     # 自动处理多步 tool calls
+│   └── app_config/                # 配置管理（JSON 文件）
 │
-├── mcp_client/                    # MCP client library (STATIC)
-│   ├── jsonrpc/                   # JSON-RPC 2.0 message types
-│   ├── transport/                 # Transport abstraction
-│   │   └── stdio_transport/       # Stdio subprocess transport
-│   ├── mcp_client/                # Single MCP server client
+├── mcp_client/                    # MCP 客户端库 (STATIC)
+│   ├── jsonrpc/                   # JSON-RPC 2.0 消息类型
+│   ├── transport/                 # 传输层抽象
+│   │   └── stdio_transport/       # Stdio 子进程传输
+│   ├── mcp_client/                # 单个 MCP 服务器客户端
 │   │   ├── initialize / list_tools / call_tool
 │   │   └── list_resources / read_resource
-│   └── mcp_manager/               # Multi-server orchestration
-│       ├── load(config)           # Load from mcpServers JSON
-│       ├── get_tools_schema()     # Aggregate tools with server prefix
+│   └── mcp_manager/               # 多服务器编排
+│       ├── load(config)           # 从 mcpServers JSON 加载
+│       ├── get_tools()            # 聚合所有工具（带 server 前缀）
 │       └── call_tool("server/tool", args)
 │
-├── external/                      # Embedded third-party dependencies (git submodules)
+├── external/                      # 嵌入式第三方依赖 (git submodules)
 │   ├── ai-sdk-cpp/                # ClickHouse AI SDK (C++20)
-│   └── catch2/                    # Catch2 v3 (tests disabled)
+│   └── catch2/                    # Catch2 v3 (测试框架)
 │
-├── agent/                         # High-level agent (conversation loop + tool handling)
-│   └── generate_text(ctx)         # Auto-handles multi-step tool calls
-│
-├── app/                           # CLI executable (assembly + REPL)
-└── tests/                         # Catch2 unit tests (disabled — see Known Issues)
+├── app/                           # CLI 可执行文件（装配 + REPL）
+├── tests/                         # Catch2 单元测试
+└── config.json                    # 配置文件（示例，已加入 .gitignore）
 ```
 
-## Prerequisites
+## 环境要求
 
 - **CMake** 3.28+
-- **C++23** compiler (MSVC 19.40+ / GCC 13+)
-- **OpenSSL** development headers
-- **npx** (for MCP servers, optional)
+- **C++23** 编译器 (MSVC 19.40+ / GCC 13+)
+- **OpenSSL** 开发头文件
+- **npx**（运行 MCP 服务器用，可选）
 
-## Build
+## 构建
 
 ```bash
-# Clone with submodules
+# 带 submodules 克隆
 git clone --recursive https://github.com/1ml1ml/cppagent.git
 cd cppagent
 
-# Or if already cloned, init submodules
+# 或已克隆后初始化 submodules
 git submodule update --init --recursive
 
-# Build
+# 构建
 cmake -B build -S .
 cmake --build build --config Release
 ```
 
-> **Note:** Tests are currently disabled due to MSVC C++20 Modules + Catch2 v3 incompatibility. Run `app/cppagent` directly for validation.
+## 配置
 
-## Run
+在 `cppagent` 根目录创建 `config.json`：
+
+```json
+{
+  "model": {
+    "api": "openai",
+    "model": "moonshot-v1-128k",
+    "base_url": "https://api.moonshot.cn",
+    "api_key": "sk-你的-api-key"
+  },
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "D:/"]
+    }
+  }
+}
+```
+
+> `config.json` 已加入 `.gitignore`，不会误提交到仓库。
+
+## 运行
 
 ```bash
-# Windows — API key is loaded from D:\Sources\cppagent\api_key.txt
+# Windows
 build\app\Release\cppagent.exe
 
 # Linux/WSL
 ./build/app/cppagent
 ```
 
-Console input is read in a REPL loop. Type your prompt and press Enter.
-Type `/exit` to quit.
+控制台以 REPL 方式读取输入，输入提示词后按回车发送。
+输入 `/exit` 退出。
 
-## MCP Configuration
-
-MCP server config is hardcoded in `app/main.cpp` as a JSON string. Edit `load_mcp_config()` in `app/main.cpp` to customize:
-
-```cpp
-constexpr auto mcp_config_json = R"({
-  "mcpServers": {
-    "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:/Users/xxx/Documents"]
-    }
-  }
-})";
-```
+## MCP 使用
 
 ```cpp
 import mcp_manager;
 
-// Load config (hardcoded or from file)
+// 加载配置
 mcp_manager mcp;
 mcp.load(config);
 
-// Get aggregated tools (prefixed as "server/tool")
-auto tools = mcp.get_tools_schema();
+// 获取聚合后的工具（自动加上 server/ 前缀）
+auto tools = mcp.get_tools();
 // [{"type":"function","function":{"name":"filesystem/read_file",...}}]
 
-// Call tool via manager (handles routing to correct server)
-auto result = mcp.call_tool("filesystem/read_file", {{"path", "/tmp/test.txt"}});
+// 通过 manager 调用 tool（自动路由到对应 server）
+auto result = mcp.call_tool("filesystem/read_file", {{"path", "D:/test.txt"}});
 ```
 
-## Agent Usage
+## Agent 使用
 
-The `agent` class encapsulates the conversation loop and tool-call handling:
+`agent` 类封装了完整的对话循环和 tool-call 处理：
 
 ```cpp
 #include <nlohmann/json.hpp>
@@ -134,48 +144,47 @@ import context;
 import message;
 import mcp_manager;
 
-// 1. Register provider factory
+// 1. 注册 Provider 工厂
 api_registry::instance().register_factory(
     "openai", std::make_shared<chat_completion_api_factory>());
 
-// 2. Create and configure agent
+// 2. 创建并配置 Agent
 auto chat_agent = std::make_shared<agent>();
 
 nlohmann::json model_config;
-model_config["api"]     = "openai";
-model_config["model"]   = "moonshot-v1-128k";
-model_config["base_url"]= "https://api.moonshot.cn";
-model_config["api_key"] = "sk-xxx";
+model_config["api"]      = "openai";
+model_config["model"]    = "moonshot-v1-128k";
+model_config["base_url"] = "https://api.moonshot.cn";
+model_config["api_key"]  = "sk-xxx";
 chat_agent->set_model_config(model_config);
 
 auto mcp = std::make_shared<mcp_manager>();
 mcp->load(mcp_config_json);
 chat_agent->set_mcp_manager(mcp);
 
-// 3. Chat
+// 3. 聊天
 auto ctx = std::make_shared<context>();
 ctx->set_instructions("You are a helpful assistant");
 ctx->append(std::make_shared<user_message>("List files in D:/"));
 
-chat_agent->generate_text(ctx);  // auto-handles tool calls
+chat_agent->generate_text(ctx);  // 自动处理 tool calls
 std::cout << ctx->messages_ref().back()->get_content() << "\n";
 ```
 
-## Key Design Decisions
+## 核心设计决策
 
-- **snake_case** for all identifiers (classes, functions, variables)
-- **PIMPL** pattern for all public classes
-- **Allman brace style** with 2-space indentation
-- **Unified initialization `{}`** throughout
-- **Message hierarchy** — `message` base class with `user_message` / `assistant_message` subclasses; visitor pattern for provider-specific serialization
-- **agent** class wraps the full generate + tool-call + result loop
-- **ai-sdk-cpp** handles HTTP, JSON schema, retry logic
+- **snake_case** — 所有标识符（类名、函数名、变量名）统一使用 snake_case
+- **PIMPL** — 所有公共类使用 PIMPL 模式隐藏实现细节
+- **Allman 大括号风格** — 2 空格缩进
+- **统一初始化 `{}`** — 禁止使用 `=` 或 `()` 初始化
+- **消息层次结构** — `message` 基类 + `user_message` / `assistant_message` 子类，visitor 模式处理 Provider 特定序列化
+- **agent 类** — 封装完整的 generate + tool-call + result 循环
+- **ai-sdk-cpp** — 处理 HTTP、JSON schema、重试逻辑
 
-## Known Issues / Limitations
+## 已知问题 / 限制
 
-- **Tests disabled:** Catch2 v3 + MSVC C++20 Modules = fatal compiler errors (C2572/C7571). Waiting for upstream fix or test framework replacement.
-- **Windows-only app:** `main.cpp` uses `SetConsoleCP` / `SetConsoleOutputCP` (Windows API) for UTF-8 console I/O. Linux/WSL build requires replacing these calls.
-- **No vcpkg:** All third-party dependencies are embedded under `external/` (ai-sdk-cpp bundles its own nlohmann_json, cpp-httplib, etc.).
+- **Windows-only app：** `main.cpp` 使用 `SetConsoleCP` / `SetConsoleOutputCP`（Windows API）实现 UTF-8 控制台 I/O。Linux/WSL 构建需要替换这些调用。
+- **无 vcpkg：** 所有第三方依赖都嵌入在 `external/` 下（ai-sdk-cpp 自带 nlohmann_json、cpp-httplib 等）。
 
 ## License
 
