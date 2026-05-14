@@ -5,8 +5,8 @@
 #include <Windows.h>
 
 #include "ai/logger.h"
-#include "app_config.hpp"
 
+import app_config;
 import agent;
 import api_registry;
 import chat_completion_api;

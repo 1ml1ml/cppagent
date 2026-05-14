@@ -1,7 +1,12 @@
-#include "app_config.hpp"
+module;
 
+#include <filesystem>
 #include <fstream>
 #include <stdexcept>
+
+#include "nlohmann/json.hpp"
+
+module app_config;
 
 class app_config::impl
 {

@@ -9,8 +9,6 @@ target_sources(test_cppagent
 		test_app_config.cpp
 )
 
-target_include_directories(test_cppagent PRIVATE "${CMAKE_SOURCE_DIR}/app")
-
 target_link_libraries(test_cppagent
 	PRIVATE
 		cppagent_core

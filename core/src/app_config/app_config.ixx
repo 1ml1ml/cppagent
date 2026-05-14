@@ -1,4 +1,4 @@
-#pragma once
+module;
 
 #include <filesystem>
 #include <memory>
@@ -6,7 +6,9 @@
 
 #include "nlohmann/json.hpp"
 
-class app_config
+export module app_config;
+
+export class app_config
 {
 public:
   app_config();

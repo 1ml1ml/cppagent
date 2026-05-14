@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include "app_config.hpp"
+import app_config;
 
 TEST_CASE("app_config load and read", "[app_config]")
 {
