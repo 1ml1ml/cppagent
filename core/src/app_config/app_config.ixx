@@ -1,8 +1,8 @@
 module;
 
-#include <filesystem>
 #include <memory>
 #include <string>
+#include <filesystem>
 
 #include "nlohmann/json.hpp"
 
@@ -16,11 +16,7 @@ public:
 
   void load(const std::filesystem::path& path);
 
-  std::string api_provider() const;
-  std::string model() const;
-  std::string base_url() const;
-  std::string api_key() const;
-  std::string instructions() const;
+  nlohmann::json model_config() const;
   nlohmann::json mcp_servers() const;
 
 private:

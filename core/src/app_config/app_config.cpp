@@ -31,29 +31,9 @@ void app_config::load(const std::filesystem::path& path)
   impl->config = nlohmann::json::parse(file);
 }
 
-std::string app_config::api_provider() const
+nlohmann::json app_config::model_config() const
 {
-  return impl->config.at("api_provider").get<std::string>();
-}
-
-std::string app_config::model() const
-{
-  return impl->config.at("model").get<std::string>();
-}
-
-std::string app_config::base_url() const
-{
-  return impl->config.at("base_url").get<std::string>();
-}
-
-std::string app_config::api_key() const
-{
-  return impl->config.at("api_key").get<std::string>();
-}
-
-std::string app_config::instructions() const
-{
-  return impl->config.at("instructions").get<std::string>();
+  return impl->config.at("model");
 }
 
 nlohmann::json app_config::mcp_servers() const
