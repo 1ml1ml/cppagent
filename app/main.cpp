@@ -1,10 +1,11 @@
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 
 #include <Windows.h>
 
 #include "ai/logger.h"
-#include "nlohmann/json.hpp"
+#include "app_config.hpp"
 
 import agent;
 import api_registry;
@@ -12,28 +13,6 @@ import chat_completion_api;
 import context;
 import message;
 import mcp_manager;
-
-std::string load_api_key(const std::string& path)
-{
-  std::string key{};
-  if (std::ifstream file{ path }; file.is_open())
-  {
-    std::getline(file, key);
-  }
-  return key;
-}
-
-nlohmann::json load_mcp_config()
-{
-  return nlohmann::json::parse(
-    R"({ "mcpServers": {
-    "filesystem": {
-      "command": "npx",
-      "args": [ "-y", "@modelcontextprotocol/server-filesystem", "D:/" ]
-    }
-  }
-})");
-}
 
 int main()
 {
@@ -44,28 +23,32 @@ int main()
     ai::logger::detail::logger_instance()
   )->set_min_level(ai::logger::LogLevel::kLogLevelInfo);
 
+  // Load configuration
+  app_config cfg{};
+  cfg.load(std::filesystem::path(__FILE__).parent_path() / "config.json");
+
   // Register API factories
   api_registry::instance().register_factory(
-    "openai", std::make_shared<chat_completion_api_factory>()
+    cfg.api_provider(), std::make_shared<chat_completion_api_factory>()
   );
 
   // Configure agent
   auto chat_agent{ std::make_shared<agent>() };
 
   nlohmann::json model_config{};
-  model_config["api"] = "openai";
-  model_config["model"] = "moonshot-v1-128k";
-  model_config["base_url"] = "https://api.moonshot.cn";
-  model_config["api_key"] = load_api_key(R"(D:\Sources\cppagent\api_key.txt)");
+  model_config["api"] = cfg.api_provider();
+  model_config["model"] = cfg.model();
+  model_config["base_url"] = cfg.base_url();
+  model_config["api_key"] = cfg.api_key();
   chat_agent->set_model_config(model_config);
 
   auto mcp{ std::make_shared<mcp_manager>() };
-  mcp->load(load_mcp_config());
+  mcp->load(cfg.mcp_servers());
   chat_agent->set_mcp_manager(mcp);
 
   // Chat context
   auto ctx{ std::make_shared<context>() };
-  ctx->set_instructions("you are a helpful assistant");
+  ctx->set_instructions(cfg.instructions());
 
   // Main loop
   while (true)

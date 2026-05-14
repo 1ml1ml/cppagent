@@ -2,7 +2,14 @@ add_executable(test_cppagent)
 
 target_sources(test_cppagent
 	PRIVATE
+		test_message.cpp
+		test_context.cpp
+		test_api_registry.cpp
+		test_agent.cpp
+		test_app_config.cpp
 )
+
+target_include_directories(test_cppagent PRIVATE "${CMAKE_SOURCE_DIR}/app")
 
 target_link_libraries(test_cppagent
 	PRIVATE
