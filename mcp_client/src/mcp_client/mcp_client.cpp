@@ -16,6 +16,16 @@ module mcp_client;
 
 import jsonrpc;
 
+mcp_client_tool_info::mcp_client_tool_info(const mcp_client_shared_ptr& client) : tool(),
+	client{ client }
+{
+}
+
+tool::result mcp_client_tool_info::call(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout) const
+{
+	return client->call_tool(name, arguments, timeout);
+}
+
 class mcp_client::impl
 {
 public:
@@ -139,7 +149,7 @@ void mcp_client::initialize(const std::chrono::milliseconds& timeout)
 	impl->initialized = true;
 }
 
-std::vector<tool_info> mcp_client::list_tools(const std::chrono::milliseconds& timeout)
+std::vector<tool_shared_ptr> mcp_client::list_tools(const std::chrono::milliseconds& timeout)
 {
 	if (!impl->initialized)
 	{
@@ -156,20 +166,20 @@ std::vector<tool_info> mcp_client::list_tools(const std::chrono::milliseconds& t
 		throw std::runtime_error{ "list_tools failed: " + resp.payload.error().message };
 	}
 
-	std::vector<tool_info> tools{};
+	std::vector<tool_shared_ptr> tools{};
 	for (const auto& tool_json : resp.payload.value()["tools"])
 	{
-		tool_info tool{};
-		tool.name = tool_json["name"].get<std::string>();
-		tool.description = tool_json["description"].get<std::string>();
-		tool.input_schema = tool_json["inputSchema"];
+		auto tool{ std::make_shared<mcp_client_tool_info>(shared_from_this()) };
+		tool->name = tool_json["name"].get<std::string>();
+		tool->description = tool_json["description"].get<std::string>();
+		tool->input_schema = tool_json["inputSchema"];
 		tools.push_back(std::move(tool));
 	}
 
 	return tools;
 }
 
-tool_result mcp_client::call_tool(const std::string_view& name, const nlohmann::json& arguments, const std::chrono::milliseconds& timeout)
+tool::result mcp_client::call_tool(const std::string_view& name, const nlohmann::json& arguments, const std::chrono::milliseconds& timeout)
 {
 	if (!impl->initialized)
 	{
@@ -190,93 +200,8 @@ tool_result mcp_client::call_tool(const std::string_view& name, const nlohmann::
 
 	auto resp_json{ resp.payload.value() };
 
-	tool_result tr{};
+	tool::result tr{};
 	tr.is_error = resp_json.value("isError", false);
 	tr.content = resp_json["content"];
 	return tr;
-}
-
-std::vector<resource_info> mcp_client::list_resources(const std::chrono::milliseconds& timeout)
-{
-	if (!impl->initialized)
-	{
-		throw std::runtime_error{ "Client not initialized" };
-	}
-
-	jsonrpc_request req{};
-	req.id = impl->next_request_id.fetch_add(1, std::memory_order_relaxed);
-	req.method = "resources/list";
-
-	auto resp{ impl->send(req, timeout) };
-	if (!resp.payload.has_value())
-	{
-		throw std::runtime_error{ "list_resources failed: " + resp.payload.error().message };
-	}
-
-	std::vector<resource_info> resources{};
-	for (const auto& resource_json : resp.payload.value()["resources"])
-	{
-		resource_info resource{};
-		resource.uri = resource_json["uri"].get<std::string>();
-		resource.name = resource_json["name"].get<std::string>();
-
-		if (resource_json.contains("mimeType"))
-		{
-			resource.mime_type = resource_json["mimeType"].get<std::string>();
-		}
-
-		if (resource_json.contains("description"))
-		{
-			resource.description = resource_json["description"].get<std::string>();
-		}
-
-		resources.push_back(std::move(resource));
-	}
-
-	return resources;
-}
-
-std::vector<resource_content> mcp_client::read_resource(const std::string_view& uri, const std::chrono::milliseconds& timeout)
-{
-	if (!impl->initialized)
-	{
-		throw std::runtime_error{ "Client not initialized" };
-	}
-
-	jsonrpc_request req{};
-	req.id = impl->next_request_id.fetch_add(1, std::memory_order_relaxed);
-	req.method = "resources/read";
-	req.params["uri"] = uri;
-
-	auto resp{ impl->send(req, timeout) };
-	if (!resp.payload.has_value())
-	{
-		throw std::runtime_error{ "read_resource failed: " + resp.payload.error().message };
-	}
-
-	std::vector<resource_content> contents{};
-	for (const auto& content_json : resp.payload.value()["contents"])
-	{
-		resource_content content{};
-		content.uri = content_json["uri"].get<std::string>();
-
-		if (content_json.contains("mimeType"))
-		{
-			content.mime_type = content_json["mimeType"].get<std::string>();
-		}
-
-		if (content_json.contains("text"))
-		{
-			content.text = content_json["text"].get<std::string>();
-		}
-
-		if (content_json.contains("blob"))
-		{
-			content.blob = content_json["blob"].get<std::string>();
-		}
-
-		contents.push_back(std::move(content));
-	}
-
-	return contents;
 }

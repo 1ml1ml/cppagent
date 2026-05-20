@@ -48,7 +48,6 @@ private:
 export struct tool_call_result
 {
 	std::string tool_call_id{};
-
 	bool error{};
 	nlohmann::json result{};
 };

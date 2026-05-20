@@ -28,6 +28,7 @@ void app_config::load(const std::filesystem::path& path)
   {
     throw std::runtime_error{ "failed to open config file: " + path.string() };
   }
+
   impl->config = nlohmann::json::parse(file);
 }
 

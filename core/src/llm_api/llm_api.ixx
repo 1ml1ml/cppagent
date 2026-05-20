@@ -46,7 +46,7 @@ export class llm_api
 public:
   virtual ~llm_api() = default;
 
-  virtual model_response_shared_ptr generate_text(nlohmann::json& config, const context_shared_ptr& ctx, const std::vector<tool_info>& tools = {}) = 0;
+  virtual model_response_shared_ptr generate_text(nlohmann::json& config, const context_shared_ptr& ctx, const std::vector<tool_shared_ptr>& tools = {}) = 0;
 };
 
 class llm_api_factory;

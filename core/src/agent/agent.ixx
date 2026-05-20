@@ -10,6 +10,7 @@ import llm_api;
 import context;
 import message;
 import mcp_manager;
+import skill_manager;
 
 export class agent
 {
@@ -23,6 +24,9 @@ public:
 
 	mcp_manager_shared_ptr get_mcp_manager() const;
 	void set_mcp_manager(const mcp_manager_shared_ptr& manager);
+
+	skill_manager_shared_ptr get_skill_manager() const;
+	void set_skill_manager(const skill_manager_shared_ptr& manager);
 
 	model_response_shared_ptr generate_text(const context_shared_ptr& ctx);
 

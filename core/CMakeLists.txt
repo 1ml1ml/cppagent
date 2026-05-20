@@ -9,6 +9,7 @@ target_include_directories(cppagent_core PUBLIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/context/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/agent/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/app_config/"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/skill_manager/"
 )
 
 target_sources(cppagent_core
@@ -21,6 +22,7 @@ target_sources(cppagent_core
 		"src/context/context.ixx"
 		"src/agent/agent.ixx"
 		"src/app_config/app_config.ixx"
+		"src/skill_manager/skill_manager.ixx"
 
 	PRIVATE
 
@@ -30,7 +32,8 @@ target_sources(cppagent_core
 		"src/context/context.cpp"
 		"src/message/message.cpp"
 		"src/agent/agent.cpp"
-		"src/app_config/app_config.cpp")
+		"src/app_config/app_config.cpp"
+		"src/skill_manager/skill_manager.cpp")
 
 target_link_libraries(cppagent_core
 	PUBLIC

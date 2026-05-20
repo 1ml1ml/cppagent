@@ -52,7 +52,13 @@ void message_to_go::visit_user_message(const std::shared_ptr<user_message>& mess
 	}
 	else
 	{
-		go.messages.push_back(ai::Message::user(message->get_content().data()));
+		std::string content{ message->get_content() };
+		for (const auto& [name, att] : message->get_attachments_ref())
+		{
+			content += std::format("\n\n[附件: {} ({}), 大小: {} bytes]", name, att.mime_type, att.data.size());
+			// TODO: 文本类附件直接追加内容；二进制类未来做 base64 编码支持 vision
+		}
+		go.messages.push_back(ai::Message::user(content));
 	}
 }
 
@@ -73,14 +79,20 @@ void message_to_go::visit_assistant_message(const std::shared_ptr<assistant_mess
 	}
 }
 
-ai::GenerateOptions make_go(const nlohmann::json& config, const context_shared_ptr& ctx, const std::vector<tool_info>& tools)
+static ai::GenerateOptions make_go(const nlohmann::json& config, const context_shared_ptr& ctx, const std::vector<tool_shared_ptr>& tools)
 {
 	ai::GenerateOptions go{};
 	go.model = config["model"].get<std::string>();
+	go.seed = config.contains("seed") ? std::optional<int>{ config["seed"].get<int>() } : std::nullopt;
+	go.top_p = config.contains("top_p") ? std::optional<double>{ config["top_p"].get<double>() } : std::nullopt;
+	go.max_tokens = config.contains("max_tokens") ? std::optional<int>{ config["max_tokens"].get<int>() } : std::nullopt;
+	go.temperature = config.contains("temperature") ? std::optional<double>{ config["temperature"].get<double>() } : std::nullopt;
+	go.presence_penalty = config.contains("presence_penalty") ? std::optional<double>{ config["presence_penalty"].get<double>() } : std::nullopt;
+	go.frequency_penalty = config.contains("frequency_penalty") ? std::optional<double>{ config["frequency_penalty"].get<double>() } : std::nullopt;
 
 	for (const auto& tool : tools)
 	{
-		go.tools.insert(std::pair{ tool.name, ai::Tool{tool.description, tool.input_schema} });
+		go.tools.insert(std::pair{ tool->name, ai::Tool{tool->description, tool->input_schema} });
 	}
 
 	go.system = ctx->get_instructions();
@@ -94,7 +106,7 @@ ai::GenerateOptions make_go(const nlohmann::json& config, const context_shared_p
 	return go;
 }
 
-model_response_shared_ptr chat_completion_api::generate_text(nlohmann::json& config, const context_shared_ptr& ctx, const std::vector<tool_info>& tools)
+model_response_shared_ptr chat_completion_api::generate_text(nlohmann::json& config, const context_shared_ptr& ctx, const std::vector<tool_shared_ptr>& tools)
 {
 	auto go{ make_go(config, ctx, tools) };
 

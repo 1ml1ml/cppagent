@@ -16,39 +16,42 @@ import transport;
 class mcp_client;
 export using mcp_client_shared_ptr = std::shared_ptr<mcp_client>;
 
-export struct tool_result
-{
-  bool is_error{};
-  nlohmann::json content{};
-};
+class tool;
+export using tool_shared_ptr = std::shared_ptr<tool>;
 
-export struct tool_info
+
+export class tool : public std::enable_shared_from_this<tool>
 {
+public:
+	struct result
+	{
+		bool is_error{};
+		nlohmann::json content{};
+	};
+
+public:
+  virtual ~tool() = default;
+
+public:
+  virtual result call(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 }) const = 0;
+
 public:
   std::string name{};
   std::string description{};
   nlohmann::json input_schema{};
 };
 
-export struct resource_info
+export class mcp_client_tool_info : public tool
 {
-  std::string uri{};
-  std::string name{};
-  std::string mime_type{};
-  std::string description{};
+public:
+  mcp_client_tool_info(const mcp_client_shared_ptr& client);
+
+public:
+  tool::result call(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 }) const override;
+
+private:
+  mcp_client_shared_ptr client{};
 };
-
-export struct resource_content
-{
-  std::string uri{};
-  std::string mime_type{};
-
-  std::string text{};
-  std::string blob{};
-};
-
-export using request_handler = std::function<nlohmann::json(const nlohmann::json& params)>;
-export using notification_handler = std::function<void(const nlohmann::json& params)>;
 
 export class mcp_client : public std::enable_shared_from_this<mcp_client>
 {
@@ -65,11 +68,8 @@ public:
 
   void initialize(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
 
-  std::vector<tool_info> list_tools(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
-  tool_result call_tool(const std::string_view& name, const nlohmann::json& arguments, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
-
-  std::vector<resource_info> list_resources(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
-  std::vector<resource_content> read_resource(const std::string_view& uri, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
+  std::vector<tool_shared_ptr> list_tools(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
+  tool::result call_tool(const std::string_view& name, const nlohmann::json& arguments, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 });
 
 private:
   class impl;
