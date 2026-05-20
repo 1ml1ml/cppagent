@@ -16,9 +16,6 @@ find_package(OpenSSL REQUIRED)
 # ── core ──
 add_subdirectory(core)
 
-# ── mcp ──
-add_subdirectory(mcp_client)
-
 # ── app ──
 add_subdirectory(app)
 
