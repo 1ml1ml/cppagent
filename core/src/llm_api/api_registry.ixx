@@ -6,7 +6,7 @@ module;
 
 export module api_registry;
 
-import llm_api;
+import core;
 
 export class api_registry
 {

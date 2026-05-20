@@ -9,15 +9,7 @@ module;
 
 export module skill_manager;
 
-export struct skill_info
-{
-  std::string name{};
-  std::string description{};
-  std::string file_path{};
-};
-
-class skill_manager;
-export using skill_manager_shared_ptr = std::shared_ptr<skill_manager>;
+import core;
 
 export class skill_manager
 {

@@ -6,10 +6,7 @@ module;
 
 export module context;
 
-import message;
-
-class context;
-export using context_shared_ptr = std::shared_ptr<context>;
+import core;
 
 export class context : public std::enable_shared_from_this<context>
 {

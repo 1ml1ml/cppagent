@@ -11,14 +11,8 @@ module;
 
 export module mcp_client;
 
+import core;
 import transport;
-
-class mcp_client;
-export using mcp_client_shared_ptr = std::shared_ptr<mcp_client>;
-
-class tool;
-export using tool_shared_ptr = std::shared_ptr<tool>;
-
 
 export class tool : public std::enable_shared_from_this<tool>
 {

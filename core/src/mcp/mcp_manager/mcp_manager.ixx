@@ -9,10 +9,7 @@ module;
 
 export module mcp_manager;
 
-import mcp_client;
-
-class mcp_manager;
-export using mcp_manager_shared_ptr = std::shared_ptr<mcp_manager>;
+import core;
 
 export class mcp_manager : public std::enable_shared_from_this<mcp_manager>
 {

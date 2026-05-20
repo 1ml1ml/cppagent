@@ -13,11 +13,7 @@ module;
 
 export module message;
 
-class message_visitor;
-export using visitor_shared_ptr = std::shared_ptr<message_visitor>;
-
-class message;
-export using message_shared_ptr = std::shared_ptr<message>;
+import core;
 
 export class message : public std::enable_shared_from_this<message>
 {
@@ -43,13 +39,6 @@ public:
 private:
 	class impl;
 	std::unique_ptr<impl> impl{};
-};
-
-export struct tool_call_result
-{
-	std::string tool_call_id{};
-	bool error{};
-	nlohmann::json result{};
 };
 
 export class user_message : public message
@@ -83,13 +72,6 @@ public:
 private:
 	class impl;
 	std::unique_ptr<impl> impl{};
-};
-
-export struct tool_call
-{
-	std::string id{};
-	std::string tool_name{};
-	nlohmann::json arguments{};
 };
 
 export class assistant_message : public message

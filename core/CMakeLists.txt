@@ -20,6 +20,7 @@ target_include_directories(cppagent_core PUBLIC
 target_sources(cppagent_core
 	PUBLIC
 		FILE_SET cxx_modules TYPE CXX_MODULES FILES
+		"src/core.ixx"
 		"src/llm_api/llm_api.ixx"
 		"src/llm_api/api_registry.ixx"
 		"src/llm_api/chat_completion_api/chat_completion_api.ixx"
