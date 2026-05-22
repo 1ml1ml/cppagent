@@ -15,6 +15,12 @@ export module message;
 
 import core;
 
+class message_visitor;
+export using visitor_shared_ptr = std::shared_ptr<message_visitor>;
+
+class message;
+export using message_shared_ptr = std::shared_ptr<message>;
+
 export class message : public std::enable_shared_from_this<message>
 {
 public:
@@ -33,8 +39,8 @@ public:
 	virtual void accept(const visitor_shared_ptr& visitor);
 
 public:
-	role get_role() const;
-	std::string_view get_content() const;
+	role role() const;
+	std::string_view content() const;
 
 private:
 	class impl;

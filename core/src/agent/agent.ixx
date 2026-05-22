@@ -6,7 +6,11 @@ module;
 
 export module agent;
 
-import core;
+import context;
+import llm_api;
+import message;
+import mcp_manager;
+import skill_manager;
 
 export class agent
 {

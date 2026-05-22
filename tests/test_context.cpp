@@ -23,7 +23,7 @@ TEST_CASE("context append single message", "[context]")
   ctx->append(std::make_shared<user_message>("hello"));
 
   REQUIRE(ctx->size() == 1);
-  REQUIRE(ctx->messages_ref()[0]->get_content() == "hello");
+  REQUIRE(ctx->messages_ref()[0]->content() == "hello");
   REQUIRE(ctx->messages_ref()[0]->get_role() == message::role::user);
 }
 
@@ -39,9 +39,9 @@ TEST_CASE("context append multiple messages", "[context]")
   ctx->append(msgs);
 
   REQUIRE(ctx->size() == 3);
-  REQUIRE(ctx->messages_ref()[0]->get_content() == "q1");
-  REQUIRE(ctx->messages_ref()[1]->get_content() == "a1");
-  REQUIRE(ctx->messages_ref()[2]->get_content() == "q2");
+  REQUIRE(ctx->messages_ref()[0]->content() == "q1");
+  REQUIRE(ctx->messages_ref()[1]->content() == "a1");
+  REQUIRE(ctx->messages_ref()[2]->content() == "q2");
 }
 
 TEST_CASE("context clear", "[context]")

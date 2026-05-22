@@ -1,8 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
 import api_registry;
-import llm_api;
 import chat_completion_api;
+import llm_api;
 
 TEST_CASE("api_registry singleton", "[api_registry]")
 {

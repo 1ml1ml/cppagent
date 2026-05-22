@@ -6,22 +6,27 @@ module;
 #include <vector>
 #include <variant>
 #include <expected>
-#include <string_view>
 #include <type_traits>
+#include <string_view>
 #include <shared_mutex>
 
 #include "nlohmann/json.hpp"
 
 module mcp_client;
 
+import core;
 import jsonrpc;
 
-mcp_client_tool_info::mcp_client_tool_info(const mcp_client_shared_ptr& client) : tool(),
-	client{ client }
+class mcp_client_tool : public tool
 {
-}
+public:
+  tool::result call(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 }) const override;
 
-tool::result mcp_client_tool_info::call(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout) const
+public:
+  mcp_client_shared_ptr client{};
+};
+
+tool::result mcp_client_tool::call(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout) const
 {
 	return client->call_tool(name, arguments, timeout);
 }
@@ -169,7 +174,8 @@ std::vector<tool_shared_ptr> mcp_client::list_tools(const std::chrono::milliseco
 	std::vector<tool_shared_ptr> tools{};
 	for (const auto& tool_json : resp.payload.value()["tools"])
 	{
-		auto tool{ std::make_shared<mcp_client_tool_info>(shared_from_this()) };
+		auto tool{ std::make_shared<mcp_client_tool>() };
+		tool->client = shared_from_this();
 		tool->name = tool_json["name"].get<std::string>();
 		tool->description = tool_json["description"].get<std::string>();
 		tool->input_schema = tool_json["inputSchema"];

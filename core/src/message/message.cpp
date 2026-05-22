@@ -15,7 +15,9 @@ module;
 
 module message;
 
-const char* message::role_to_string(role r) noexcept
+import core;
+
+const char* message::role_to_string(enum class role r) noexcept
 {
 	switch (r)
 	{
@@ -28,11 +30,11 @@ const char* message::role_to_string(role r) noexcept
 class message::impl
 {
 public:
-	role role{ role::user };
+	enum class role role{ role::user };
 	std::string content{};
 };
 
-message::message(const role& r, const std::string_view& content) :
+message::message(const enum class role& r, const std::string_view& content) :
 	impl{ std::make_unique<class impl>() }
 {
 	impl->role = r;
@@ -46,12 +48,12 @@ void message::accept(const visitor_shared_ptr& visitor)
 	throw std::runtime_error{ "empty accept" };
 }
 
-message::role message::get_role() const
+enum class message::role message::role() const
 {
 	return impl->role;
 }
 
-std::string_view message::get_content() const
+std::string_view message::content() const
 {
 	return impl->content;
 }

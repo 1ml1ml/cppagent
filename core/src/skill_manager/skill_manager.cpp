@@ -1,25 +1,42 @@
 module;
 
-#include <filesystem>
+#include <chrono>
+#include <vector>
 #include <format>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <filesystem>
 #include <string_view>
-#include <vector>
+
+#include "nlohmann/json.hpp"
 
 module skill_manager;
+
+import core;
+
+class skill_load_tool : public tool
+{
+public:
+	tool::result call(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 }) const override;
+
+public:
+	skill_manager_shared_ptr skill_manager{};
+};
+
+tool::result skill_load_tool::call(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout) const
+{
+	return { false, skill_manager->load_body(name) };
+}
 
 class skill_manager::impl
 {
 public:
 	static std::string extract_yaml_value(std::string_view yaml, std::string_view key);
 	static skill_info parse_skill_md(const std::filesystem::path& path);
-	static std::string read_body(const std::filesystem::path& path);
-
 
 public:
-	std::vector<skill_info> skill_list{};
+	std::vector<skill_info> skills{};
 };
 
 std::string skill_manager::impl::extract_yaml_value(std::string_view yaml, std::string_view key)
@@ -86,38 +103,6 @@ skill_info skill_manager::impl::parse_skill_md(const std::filesystem::path& path
 	return skill;
 }
 
-std::string skill_manager::impl::read_body(const std::filesystem::path& path)
-{
-	std::ifstream file{ path };
-	if (!file.is_open())
-	{
-		return {};
-	}
-
-	std::stringstream buffer{};
-	buffer << file.rdbuf();
-	std::string content{ buffer.str() };
-
-	if (content.starts_with("---"))
-	{
-		auto end_pos{ content.find("---", 3) };
-		if (end_pos != std::string::npos)
-		{
-			auto body_start{ end_pos + 3 };
-
-			while (body_start < content.length() &&
-				(content[body_start] == '\n' || content[body_start] == '\r'))
-			{
-				++body_start;
-			}
-
-			return content.substr(body_start);
-		}
-	}
-
-	return content;
-}
-
 skill_manager::skill_manager()
 	: impl{ std::make_unique<class impl>() }
 {
@@ -153,18 +138,18 @@ void skill_manager::load(const std::filesystem::path& dir)
 		}
 
 		skill.file_path = md_path.string();
-		impl->skill_list.push_back(skill);
+		impl->skills.push_back(skill);
 	}
 }
 
 std::vector<skill_info> skill_manager::skills() const
 {
-	return impl->skill_list;
+	return impl->skills;
 }
 
 bool skill_manager::has_skill(const std::string_view& name) const
 {
-	for (const auto& skill : impl->skill_list)
+	for (const auto& skill : impl->skills)
 	{
 		if (skill.name == name)
 		{
@@ -176,13 +161,13 @@ bool skill_manager::has_skill(const std::string_view& name) const
 
 std::string skill_manager::catalog_text() const
 {
-	if (impl->skill_list.empty())
+	if (impl->skills.empty())
 	{
 		return {};
 	}
 
 	std::string catalog{ "## 可用技能\n\n" };
-	for (const auto& s : impl->skill_list)
+	for (const auto& s : impl->skills)
 	{
 		catalog += std::format("- `{}`: {}\n", s.name, s.description);
 	}
@@ -192,12 +177,34 @@ std::string skill_manager::catalog_text() const
 
 std::string skill_manager::load_body(const std::string_view& name) const
 {
-	for (const auto& skill : impl->skill_list)
+	std::string content{};
+	if (auto it{ std::ranges::find_if(impl->skills, [&name](const skill_info& s) { return s.name == name; }) }; it != impl->skills.end())
 	{
-		if (skill.name == name)
+		if (std::ifstream file{ it->file_path }; file.is_open())
 		{
-			return impl::read_body(skill.file_path);
+			std::stringstream buffer{};
+			buffer << file.rdbuf();
+
+			content = buffer.str();
+			if (content.starts_with("---"))
+			{
+				auto end_pos{ content.find("---", 3) };
+				if (end_pos != std::string::npos)
+				{
+					auto body_start{ end_pos + 3 };
+					while (body_start < content.length() && (content[body_start] == '\n' || content[body_start] == '\r'))
+					{
+						++body_start;
+					}
+					return content.substr(body_start);
+				}
+			}
 		}
 	}
-	return {};
+	return content;
+}
+
+std::vector<tool_shared_ptr> skill_manager::list_tools() const
+{
+	return std::vector<tool_shared_ptr>();
 }

@@ -8,20 +8,43 @@ module;
 export module llm_api;
 
 import core;
+import context;
+import message;
+import mcp_client;
+
+export class model_response : public std::enable_shared_from_this<model_response>
+{
+public:
+  std::string id{};
+  std::string model{};
+  std::string finish_reason{};
+
+  usage_info usage{};
+  message_shared_ptr message{};
+};
+export using model_response_shared_ptr = std::shared_ptr<model_response>;
+
+class llm_api;
+export using api_unique_ptr = std::unique_ptr<llm_api>;
 
 export class llm_api
 {
 public:
   virtual ~llm_api() = default;
 
+public:
   virtual model_response_shared_ptr generate_text(nlohmann::json& config, const context_shared_ptr& ctx, const std::vector<tool_shared_ptr>& tools = {}) = 0;
 };
+
+class llm_api_factory;
+export using api_factory_shared_ptr = std::shared_ptr<llm_api_factory>;
 
 export class llm_api_factory : public std::enable_shared_from_this<llm_api_factory>
 {
 public:
   virtual ~llm_api_factory() = default;
 
+public:
   virtual std::string_view name() const = 0;
   virtual api_unique_ptr create() const = 0;
 };

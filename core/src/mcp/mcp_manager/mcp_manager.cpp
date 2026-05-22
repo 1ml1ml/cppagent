@@ -40,7 +40,7 @@ void mcp_manager::load(const nlohmann::json& config)
   }
 }
 
-std::vector<tool_shared_ptr> mcp_manager::get_tools(const std::chrono::milliseconds& timeout) const
+std::vector<tool_shared_ptr> mcp_manager::list_tools(const std::chrono::milliseconds& timeout) const
 {
 	std::vector<tool_shared_ptr> tools{};
 	for (const auto& [server_name, client] : impl->clients)

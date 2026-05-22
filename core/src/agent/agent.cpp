@@ -6,7 +6,10 @@ module;
 
 module agent;
 
+import core;
+import context;
 import llm_api;
+import message;
 import mcp_client;
 import mcp_manager;
 import api_registry;
@@ -60,7 +63,7 @@ void agent::set_skill_manager(const skill_manager_shared_ptr& manager)
 model_response_shared_ptr agent::generate_text(const context_shared_ptr& ctx)
 {
 	auto api{ api_registry::instance().create(impl->model_config["api"].get<std::string>()) };
-	auto tools{ impl->mcp_manager ? impl->mcp_manager->get_tools() : std::vector<tool_shared_ptr>{} };
+	auto tools{ impl->mcp_manager ? impl->mcp_manager->list_tools() : std::vector<tool_shared_ptr>{} };
 
 	while (true)
 	{

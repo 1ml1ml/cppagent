@@ -5,12 +5,12 @@
 #include <Windows.h>
 
 import agent;
-import context;
-import message;
 import app_config;
-import mcp_manager;
 import api_registry;
 import chat_completion_api;
+import context;
+import message;
+import mcp_manager;
 
 int main()
 {
@@ -56,7 +56,7 @@ int main()
     try
     {
       auto resp{ chat_agent->generate_text(ctx) };
-      std::cout << resp->message->get_content() << '\n' << std::endl;
+      std::cout << resp->message->content() << '\n' << std::endl;
     }
     catch (const std::exception& e)
     {

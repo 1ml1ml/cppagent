@@ -5,12 +5,13 @@ module;
 #include <vector>
 #include <stdexcept>
 
-#include "ai/tools.h"
 #include "ai/openai.h"
+#include "ai/tools.h"
 #include "nlohmann/json.hpp"
 
 module chat_completion_api;
 
+import core;
 import context;
 import llm_api;
 import message;
@@ -38,7 +39,7 @@ void message_to_go::visit_user_message(const std::shared_ptr<user_message>& mess
 {
 	if (message->get_tool_call_results_ref().size())
 	{
-		if (message->get_content().size())
+		if (message->content().size())
 		{
 			throw std::runtime_error{ "Role messages are not allowed to have both tool_call and content at the same time" };
 		}
@@ -52,7 +53,7 @@ void message_to_go::visit_user_message(const std::shared_ptr<user_message>& mess
 	}
 	else
 	{
-		std::string content{ message->get_content() };
+		std::string content{ message->content() };
 		for (const auto& [name, att] : message->get_attachments_ref())
 		{
 			content += std::format("\n\n[附件: {} ({}), 大小: {} bytes]", name, att.mime_type, att.data.size());
@@ -71,11 +72,11 @@ void message_to_go::visit_assistant_message(const std::shared_ptr<assistant_mess
 		{
 			tool_calls.emplace_back(tool_call.id, tool_call.tool_name, tool_call.arguments);
 		}
-		go.messages.push_back(ai::Message::assistant_with_tools(message->get_content().data(), tool_calls));
+		go.messages.push_back(ai::Message::assistant_with_tools(message->content().data(), tool_calls));
 	}
 	else
 	{
-		go.messages.push_back(ai::Message::assistant(message->get_content().data()));
+		go.messages.push_back(ai::Message::assistant(message->content().data()));
 	}
 }
 

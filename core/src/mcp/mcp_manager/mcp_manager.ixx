@@ -10,6 +10,10 @@ module;
 export module mcp_manager;
 
 import core;
+import mcp_client;
+
+class mcp_manager;
+export using mcp_manager_shared_ptr = std::shared_ptr<mcp_manager>;
 
 export class mcp_manager : public std::enable_shared_from_this<mcp_manager>
 {
@@ -20,7 +24,7 @@ public:
 public:
   void load(const nlohmann::json& config);
 
-  std::vector<tool_shared_ptr> get_tools(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 }) const;
+  std::vector<tool_shared_ptr> list_tools(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 }) const;
 
 private:
   class impl;

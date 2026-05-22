@@ -14,6 +14,7 @@ public:
   app_config();
   ~app_config();
 
+public:
   void load(const std::filesystem::path& path);
 
   nlohmann::json model_config() const;

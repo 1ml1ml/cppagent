@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+
 #include "nlohmann/json.hpp"
 
 import message;
@@ -13,7 +14,7 @@ TEST_CASE("user_message construction", "[message]")
 {
   auto msg{ std::make_shared<user_message>("hello") };
   REQUIRE(msg->get_role() == message::role::user);
-  REQUIRE(msg->get_content() == "hello");
+  REQUIRE(msg->content() == "hello");
   REQUIRE(msg->get_attachments_ref().empty());
   REQUIRE(msg->get_tool_call_results_ref().empty());
 }
@@ -21,21 +22,21 @@ TEST_CASE("user_message construction", "[message]")
 TEST_CASE("user_message default content", "[message]")
 {
   auto msg{ std::make_shared<user_message>() };
-  REQUIRE(msg->get_content().empty());
+  REQUIRE(msg->content().empty());
 }
 
 TEST_CASE("assistant_message construction", "[message]")
 {
   auto msg{ std::make_shared<assistant_message>("world") };
   REQUIRE(msg->get_role() == message::role::assistant);
-  REQUIRE(msg->get_content() == "world");
+  REQUIRE(msg->content() == "world");
   REQUIRE(msg->get_tool_calls_ref().empty());
 }
 
 TEST_CASE("assistant_message default content", "[message]")
 {
   auto msg{ std::make_shared<assistant_message>() };
-  REQUIRE(msg->get_content().empty());
+  REQUIRE(msg->content().empty());
 }
 
 TEST_CASE("assistant_message with tool_calls", "[message]")

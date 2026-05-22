@@ -14,38 +14,8 @@ export module mcp_client;
 import core;
 import transport;
 
-export class tool : public std::enable_shared_from_this<tool>
-{
-public:
-	struct result
-	{
-		bool is_error{};
-		nlohmann::json content{};
-	};
-
-public:
-  virtual ~tool() = default;
-
-public:
-  virtual result call(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 }) const = 0;
-
-public:
-  std::string name{};
-  std::string description{};
-  nlohmann::json input_schema{};
-};
-
-export class mcp_client_tool_info : public tool
-{
-public:
-  mcp_client_tool_info(const mcp_client_shared_ptr& client);
-
-public:
-  tool::result call(const nlohmann::json& arguments, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 5000 }) const override;
-
-private:
-  mcp_client_shared_ptr client{};
-};
+class mcp_client;
+export using mcp_client_shared_ptr = std::shared_ptr<mcp_client>;
 
 export class mcp_client : public std::enable_shared_from_this<mcp_client>
 {
